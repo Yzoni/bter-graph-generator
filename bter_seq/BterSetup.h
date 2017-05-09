@@ -5,22 +5,17 @@
 
 namespace BTERSeq {
 
+    struct BTERSetupResult {
+        int *id, *ndprime;
+        double *wd, *rdfill, *ndfill, *wg, *ig, *bg, *ng;
+    };
+
     class BTERSetup {
     private:
-        double *nd;
-        double *cd;
-        double *beta;
-        int *id;
-        double *wd;
-        double *rdfill;
-        double *ndfill;
-        double *wg;
-        double *ig;
-        double *bg;
-        double *ng;
-        int *dmax;
-        int *ndprime;
-
+        double *nd, *cd, *beta;
+        int *id, *ndprime;
+        double *wd, *rdfill, *ndfill, *wg, *ig, *bg, *ng;
+        int dmax;
 
     public:
         void compute_index_degree();
@@ -34,16 +29,8 @@ namespace BTERSeq {
         BTERSetup(double *nd,
                   double *cd,
                   double *beta,
-                  int *id,
-                  double *wd,
-                  double *rdfill,
-                  double *ndfill,
-                  double *wg,
-                  double *ig,
-                  double *bg,
-                  double *ng,
-                  int *dmax,
-                  int *ndprime);
+                  int dmax,
+                  BTERSetupResult *bterSetupResult);
     };
 }
 #endif //BTER_SEQUENTIAL_BTERSEQ_H_H

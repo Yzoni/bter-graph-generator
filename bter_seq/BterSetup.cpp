@@ -8,17 +8,24 @@
 
 namespace BTERSeq {
 
-    BTERSetup::BTERSetup(double *nd, double *cd, double *beta, int *id, double *wd, double *rdfill, double *ndfill,
-                         double *wg, double *ig, double *bg, double *ng, int *dmax, int *ndprime) : nd(nd), cd(cd),
-                                                                                                    beta(beta),
-                                                                                                    id(id), wd(wd),
-                                                                                                    rdfill(rdfill),
-                                                                                                    ndfill(ndfill),
-                                                                                                    wg(wg), ig(ig),
-                                                                                                    bg(bg), ng(ng),
-                                                                                                    dmax(dmax),
-                                                                                                    ndprime(ndprime) {
-
+    BTERSetup::BTERSetup(
+            double *nd,
+            double *cd,
+            double *beta,
+            int dmax,
+            BTERSetupResult *bterSetupResult
+    ) : nd(nd), cd(cd),
+        beta(beta),
+        dmax(dmax),
+        id(bterSetupResult->id),
+        wd(bterSetupResult->wd),
+        rdfill(bterSetupResult->rdfill),
+        ndfill(bterSetupResult->ndfill),
+        wg(bterSetupResult->wg),
+        ig(bterSetupResult->ig),
+        bg(bterSetupResult->bg),
+        ng(bterSetupResult->ng),
+        ndprime(bterSetupResult->ndprime) {
     }
 
     /**
@@ -27,14 +34,14 @@ namespace BTERSeq {
      * @param ndprime
      */
     void BTERSetup::compute_degree_greater_then() {
-        std::vector<int> temp1(nd, &nd[*dmax]);
-        std::vector<int> temp2(nd, &nd[*dmax]);
+        std::vector<int> temp1(nd, &nd[dmax]);
+        std::vector<int> temp2(nd, &nd[dmax]);
 
         std::partial_sum(temp1.rbegin(), rend(temp1), rbegin(temp2));
         auto it = std::next(temp2.begin(), 2);
         ndprime[0] = 0;
         std::copy(it, end(temp2), ndprime + 1);
-        ndprime[*dmax - 1] = 0;
+        ndprime[dmax - 1] = 0;
     }
 
     /**
@@ -42,9 +49,9 @@ namespace BTERSeq {
      * Degree 1 vertices are numbered last.
      */
     void BTERSetup::compute_index_degree() {
-        std::partial_sum(&nd[1], &nd[*dmax], &id[0]);
-        std::rotate(&id[0], &id[*dmax - 2], &id[*dmax]);
-        for (int i = 0; i < *dmax; ++i) ++id[i];
+        std::partial_sum(&nd[1], &nd[dmax], &id[0]);
+        std::rotate(&id[0], &id[dmax - 2], &id[dmax]);
+        for (int i = 0; i < dmax; ++i) ++id[i];
         id[1] = 1;
     }
 
@@ -69,7 +76,7 @@ namespace BTERSeq {
         compute_index_degree();
         compute_degree_greater_then();
         handle_degree_one();
-        for (int d = 1; d < *dmax; ++d) {
+        for (int d = 1; d < dmax; ++d) {
             // Try to fill incomplete block from current group
             if (nfillblk > 0) {
                 ndfill[d] = std::min(nfillblk, nd[d]);

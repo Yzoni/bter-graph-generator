@@ -15,20 +15,24 @@ namespace BTERSeq {
                     0.017869824183824, 0.005860223916729};
 
         double beta = 1;
-
         int dmax = DMAX;
-        int id[DMAX] = {};
-        double wd[DMAX] = {};
-        double rdfill[DMAX] = {};
-        double ndfill[DMAX] = {};
-        double wg[DMAX] = {};
-        double ig[DMAX] = {};
-        double bg[DMAX] = {};
+
+        int id[DMAX]{};
+        double wd[DMAX]{};
+        double rdfill[DMAX]{};
+        double ndfill[DMAX]{};
+        double wg[DMAX]{};
+        double ig[DMAX]{};
+        double bg[DMAX]{};
         double ng[DMAX]{};
         int ndprime[DMAX]{};
 
+        BTERSetupResult bterSetupResult{
+                id, ndprime,
+                wd, rdfill, ndfill, wg, ig, bg, ng
+        };
 
-        BTERSetup bterSetup(nd, cd, &beta, id, wd, rdfill, ndfill, wg, ig, bg, ng, &dmax, ndprime);
+        BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
         bterSetup.compute_index_degree();
 
         int correct[] = {19, 1, 5, 12, 16, 17, 18};
@@ -43,20 +47,24 @@ namespace BTERSeq {
                     0.017869824183824, 0.005860223916729};
 
         double beta = 1;
-
         int dmax = DMAX;
-        int id[DMAX] = {};
-        double wd[DMAX] = {};
-        double rdfill[DMAX] = {};
-        double ndfill[DMAX] = {};
-        double wg[DMAX] = {};
-        double ig[DMAX] = {};
-        double bg[DMAX] = {};
+
+        int id[DMAX]{};
+        double wd[DMAX]{};
+        double rdfill[DMAX]{};
+        double ndfill[DMAX]{};
+        double wg[DMAX]{};
+        double ig[DMAX]{};
+        double bg[DMAX]{};
         double ng[DMAX]{};
         int ndprime[DMAX]{};
 
+        BTERSetupResult bterSetupResult{
+                id, ndprime,
+                wd, rdfill, ndfill, wg, ig, bg, ng
+        };
 
-        BTERSetup bterSetup(nd, cd, &beta, id, wd, rdfill, ndfill, wg, ig, bg, ng, &dmax, ndprime);
+        BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
         bterSetup.compute_index_degree();
         bterSetup.compute_degree_greater_then();
 
@@ -73,20 +81,24 @@ namespace BTERSeq {
                     0.017869824183824, 0.005860223916729};
 
         double beta = 1;
-
         int dmax = DMAX;
-        int id[DMAX] = {};
-        double wd[DMAX] = {};
-        double rdfill[DMAX] = {};
-        double ndfill[DMAX] = {};
-        double wg[DMAX] = {};
-        double ig[DMAX] = {};
-        double bg[DMAX] = {};
+
+        int id[DMAX]{};
+        double wd[DMAX]{};
+        double rdfill[DMAX]{};
+        double ndfill[DMAX]{};
+        double wg[DMAX]{};
+        double ig[DMAX]{};
+        double bg[DMAX]{};
         double ng[DMAX]{};
         int ndprime[DMAX]{};
 
+        BTERSetupResult bterSetupResult{
+                id, ndprime,
+                wd, rdfill, ndfill, wg, ig, bg, ng
+        };
 
-        BTERSetup bterSetup(nd, cd, &beta, id, wd, rdfill, ndfill, wg, ig, bg, ng, &dmax, ndprime);
+        BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
         bterSetup.compute_index_degree();
         bterSetup.handle_degree_one();
 
@@ -107,31 +119,36 @@ namespace BTERSeq {
                     0.017869824183824, 0.005860223916729};
 
         double beta = 1;
-
         int dmax = DMAX;
-        int id[DMAX] = {};
-        double wd[DMAX] = {};
-        double rdfill[DMAX] = {};
-        double ndfill[DMAX] = {};
-        double wg[DMAX] = {};
-        double ig[DMAX] = {};
-        double bg[DMAX] = {};
+
+        int id[DMAX]{};
+        double wd[DMAX]{};
+        double rdfill[DMAX]{};
+        double ndfill[DMAX]{};
+        double wg[DMAX]{};
+        double ig[DMAX]{};
+        double bg[DMAX]{};
         double ng[DMAX]{};
         int ndprime[DMAX]{};
 
+        BTERSetupResult bterSetupResult{
+                id, ndprime,
+                wd, rdfill, ndfill, wg, ig, bg, ng
+        };
 
-        BTERSetup bterSetup(nd, cd, &beta, id, wd, rdfill, ndfill, wg, ig, bg, ng, &dmax, ndprime);
+        BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
         bterSetup.run();
 
-        // id,wd,ndfill,rdfill,ig,wg,bg,ng
         int corrent_id[]{19, 1, 5, 12, 16, 17, 18};
-        double correct_wd[]{1,0.082952986928035,3.374227276603903,4.172538842141774,1.772888372257843,2.272888372257843,2.772888372257843};
+        double correct_wd[]{1, 0.082952986928035, 3.374227276603903, 4.172538842141774, 1.772888372257843,
+                            2.272888372257843, 2.772888372257843};
         double correct_ndfill[]{2, 0, 2, 3, 1, 1, 1};
         double correct_rdfill[]{1, 0, 0.308656296120113, 0.694936723080458, 1, 1, 1};
         double correct_ig[]{1, 7, 15, 0, 0, 0, 0};
         double correct_wg[]{23.254653692022522, 14.014258268340225, 3.978514544364716, 0, 0, 0, 0};
         double correct_bg[]{2, 2, 1, 0, 0, 0, 0};
         double correct_ng[]{3, 4, 4, 0, 0, 0, 0};
+
         ASSERT_THAT(id, testing::ContainerEq(corrent_id));
         EXPECT_THAT(wd, testing::ContainerEq(correct_wd));
         EXPECT_THAT(ndfill, testing::ContainerEq(correct_ndfill));
