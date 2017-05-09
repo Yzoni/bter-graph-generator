@@ -57,7 +57,6 @@ namespace BTERSeq {
             r[i] = randomUnified(0, 1);
         }
 
-        bterSamples->s1;
         double t = (wg_sum / w);
         for (int i = 0; i < nsmp; ++i) {
             if (r[i] < t) {

@@ -41,9 +41,9 @@ namespace BTERSeq {
         BterSamples bterSamples;
         bterPhases.computeSamples(&bterSamples);
 
-        std::cout << "compute samples: \n" << std::endl;
-        std::cout << "s1 Value: " << bterSamples.s1 << std::endl;
-        std::cout << "s2 Value: " << bterSamples.s2 << std::endl;
+        std::cerr << "\ncompute samples: \n";
+        std::cerr << "s1 Value: " << bterSamples.s1 << std::endl;
+        std::cerr << "s2 Value: " << bterSamples.s2 << std::endl;
     }
 
 }
