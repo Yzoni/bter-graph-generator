@@ -8,7 +8,8 @@
 
 namespace BTERSeq {
 
-    BterPhases::BterPhases(BTERSetupResult *bterSetupResult, int dmax) : bterSetupResult(bterSetupResult), dmax(dmax) {
+    BterPhases::BterPhases(BTERSetupResult *bterSetupResult, int dmax, double *nd, double *cd) :
+            bterSetupResult(bterSetupResult), dmax(dmax), nd(nd), cd(cd) {
 
     }
 
@@ -44,28 +45,28 @@ namespace BTERSeq {
         }
     }
 
-    void BterPhases::computeNsmp(double *wg_sum, double *wd_sum, int *nsmp) {
-        *wg_sum = std::accumulate(bterSetupResult->wg, &bterSetupResult->wg[dmax - 1], 0, std::plus<double>());
-        *wd_sum = std::accumulate(bterSetupResult->wd, &bterSetupResult->wd[dmax - 1], 0, std::plus<double>());
-        double w = *wg_sum + *wd_sum;
-        *nsmp = (int) std::round(w);
-    }
-
     void BterPhases::computeSamples(BterSamples *bterSamples) {
-        double w = bterSamples->wg_sum + bterSamples->wd_sum;
+        double wg_sum = std::accumulate(bterSetupResult->wg, &bterSetupResult->wg[dmax - 1], 0, std::plus<double>());
+        double wd_sum = std::accumulate(bterSetupResult->wd, &bterSetupResult->wd[dmax - 1], 0, std::plus<double>());
+        double w = wg_sum + wd_sum;
 
-        for (int i = 0; i < bterSamples->nsmp; ++i) {
-            bterSamples->r[i] = randomUnified(0, 1);
+        int nsmp = (int) std::round(w);
+
+        double *r = new double[nsmp];
+        for (int i = 0; i < nsmp; ++i) {
+            r[i] = randomUnified(0, 1);
         }
 
         bterSamples->s1;
-        double t = (bterSamples->wg_sum / w);
-        for (int i = 0; i < bterSamples->nsmp; ++i) {
-            if (bterSamples->r[i] < t) {
+        double t = (wg_sum / w);
+        for (int i = 0; i < nsmp; ++i) {
+            if (r[i] < t) {
                 ++bterSamples->s1;
             }
         }
-        bterSamples->s2 = bterSamples->nsmp - bterSamples->s1;
+        bterSamples->s2 = nsmp - bterSamples->s1;
+
+        delete[] r;
     }
 
     void BterPhases::phaseOne(int *phase_one) {
@@ -113,17 +114,49 @@ namespace BTERSeq {
     void BterPhases::phaseTwo(int *phase_two_i, int *phase_two_j) {
 
         int i;
+        double *id_bulk = new double[dmax];
+        double *nd_bulk = new double[dmax];
         for (i = 0; i < dmax; ++i) {
-
+            id_bulk[i] = bterSetupResult->id[i] + bterSetupResult->ndfill[i];
+            nd_bulk[i] = nd[i] - bterSetupResult->ndfill[i];
         }
 
-        int phase_two_fill;
-        int phase_two_bulk;
+        phaseTwoNode(id_bulk, nd_bulk, phase_two_i);
+        phaseTwoNode(id_bulk, nd_bulk, phase_two_j);
+    }
+
+    void BterPhases::phaseTwoNode(double *id_bulk, double *nd_bulk, int *phase_two) {
+        // One array for each edge
+        int *degree_sample = new int[bterSamples->s2];
+
+        // Excess degree sample
+        randomSample(bterSetupResult->wd, bterSamples->s2, degree_sample);
+
+        double *phase_two_shift_fill = new double[bterSamples->s2];
+        double *phase_two_sz_fill = new double[bterSamples->s2];
+        double *phase_two_shift_bulk = new double[bterSamples->s2];
+        double *pase_two_sz_bulk = new double[bterSamples->s2];
+
+        int i, sample;
         for (i = 0; i < bterSamples->s2; ++i) {
-
+            sample = degree_sample[i];
+            phase_two_shift_fill[i] = bterSetupResult->id[sample];
+            phase_two_sz_fill[i] = bterSetupResult->ndfill[sample];
+            phase_two_shift_bulk[i] = id_bulk[sample];
+            pase_two_sz_bulk[i] = nd_bulk[sample];
         }
 
+        double phase_two_fill, phase_two_bulk;
+        for (i = 0; i < bterSamples->s2; ++i) {
+            phase_two_fill = phase_two_shift_fill[i] + floor(randomUnified(0, 1) * phase_two_sz_fill[i]);
+            phase_two_bulk = phase_two_shift_bulk[i] + floor(randomUnified(0, 1) * pase_two_sz_bulk[i]);
+            *phase_two = (int) (phase_two_fill + phase_two_bulk); // TODO
+        }
 
+        delete[] phase_two_shift_fill;
+        delete[] phase_two_sz_fill;
+        delete[] phase_two_shift_bulk;
+        delete[] pase_two_sz_bulk;
     }
 
     void BterPhases::removeLoopsPhaseTwo() {

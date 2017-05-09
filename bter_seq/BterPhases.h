@@ -6,21 +6,14 @@
 namespace BTERSeq {
 
     struct BterSamples {
-        double *r;
-        int s1;
-        int s2;
-        double wg_sum;
-        double wd_sum;
-        int nsmp;
+        int s1, s2;
     };
 
     class BterPhases {
     public:
-        BterPhases(BTERSetupResult *bterSetupResult, int dmax);
+        BterPhases(BTERSetupResult *bterSetupResult, int dmax, double *nd, double *cd);
 
         void computeSamples(BterSamples *bterSamples);
-
-        void computeNsmp(double *wg_sum, double *wd_sum, int *nsmp);
 
     private:
         BterSamples *bterSamples;
@@ -28,6 +21,8 @@ namespace BTERSeq {
         BTERSetupResult *bterSetupResult;
 
         int dmax;
+
+        double *nd, *cd;
 
         double randomUnified(int from, int to);
 
@@ -38,6 +33,10 @@ namespace BTERSeq {
         void phaseTwo(int *phase_two_i, int *phase_two_j);
 
         void removeLoopsPhaseTwo();
+
+        void phaseTwoOneEdge(double *id_bulk, double *nd_bulk, int *phase_two);
+
+        void phaseTwoNode(double *id_bulk, double *nd_bulk, int *phase_two);
     };
 }
 

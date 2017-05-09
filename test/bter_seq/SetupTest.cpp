@@ -133,7 +133,7 @@ namespace BTERSeq {
 
         BTERSetupResult bterSetupResult{
                 id, ndprime,
-                wd, rdfill, ndfill, wg, ig, bg, ng
+                nd, cd, wd, rdfill, ndfill, wg, ig, bg, ng
         };
 
         BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
