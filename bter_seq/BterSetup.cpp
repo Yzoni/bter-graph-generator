@@ -97,15 +97,15 @@ namespace BTERSeq {
                 ng[g] = d + 2;
 
                 // Special handling for last group
-                if ((bg[g] * (d + 1)) > (ndprime[d] + ndbulktmp)) {
+                if ((bg[g] * (d + 2)) > (ndprime[d] + ndbulktmp)) {
                     if (bg[g] != 1) {
-                        std::cout << "Last group has more than 1 block" << std::endl;
+                        std::cerr << "Last group has more than 1 block" << std::endl;
                     }
                     ng[g] = ndprime[d] + ndbulktmp;
                 }
-                rho = std::pow(cd[d], (1.0 / 3));
-                intdeg = (ng[g] - 1) * rho;
-                wdbulktmp = 0.5 * ndbulktmp * ((d + 1) - intdeg);
+                rho = std::pow(cd[d], (1.0 / 3.0));
+                intdeg = (ng[g] - 1.0) * rho;
+                wdbulktmp = 0.5 * ndbulktmp * (d + 1 - intdeg);
 
                 // Calculate weight for picking the group in phase 1
                 wg[g] = bg[g] * 0.5 * ng[g] * (ng[g] - 1) * std::log(1.0 / (1 - rho));
