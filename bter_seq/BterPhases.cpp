@@ -89,7 +89,7 @@ namespace BTERSeq {
 
         int k, sample;
         for (k = 0; k < bterSamples.s1; ++k) {
-            sample = group_sample[k];
+            sample = group_sample[k] - 1;
             block_b[k] = bterSetupResult->bg[sample]; // Index of first node in group g
             block_i[k] = bterSetupResult->ig[sample]; // Number of affinity block in group g
             block_n[k] = bterSetupResult->ng[sample]; // Number of of nodes in group g
@@ -104,7 +104,8 @@ namespace BTERSeq {
             // Choose first node
             phase_one_i[k] = (int) std::round(floor(randomUnified(0, 1) * block_n[k]) + shift);
 
-            // Choose second node // TODO block_n should now be allowed to become negative
+            // Choose second node
+            // "Without replacement"
             phase_one_j[k] = (int) std::round(floor(randomUnified(0, 1) * (block_n[k] - 1)) + shift);
 
             // Remove loops
@@ -145,7 +146,7 @@ namespace BTERSeq {
 
         int i, sample;
         for (i = 0; i < bterSamples.s2; ++i) {
-            sample = degree_sample[i];
+            sample = degree_sample[i] - 1;
             phase_two_shift_fill[i] = bterSetupResult->id[sample];
             phase_two_sz_fill[i] = bterSetupResult->ndfill[sample];
             phase_two_shift_bulk[i] = id_bulk[sample];
