@@ -1,5 +1,4 @@
 #include <iostream>
-#include <spdlog/spdlog.h>
 
 #include "BterPhases.h"
 
@@ -8,13 +7,16 @@
 using namespace bter;
 
 void setupLogger() {
-    auto console = spdlog::stdout_color_mt("logger");
-    console->info("Logging started");
+
 }
+
+extern void cudaTestFunction();
 
 int main() {
 
     setupLogger();
+
+    cudaTestFunction();
 
     double nd[]{2, 4, 7, 4, 1, 1, 1};
     double cd[]{0, 0.939066565437604, 0.327035150501861, 0.113901512792621, 0.038132502986394,

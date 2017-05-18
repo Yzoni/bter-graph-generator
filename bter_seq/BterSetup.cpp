@@ -3,7 +3,6 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include <spdlog/spdlog.h>
 
 #include "BterSetup.h"
 
@@ -38,10 +37,9 @@ namespace bter {
         std::vector<int> temp1(nd, &nd[dmax]);
         std::vector<int> temp2(nd, &nd[dmax]);
 
-        std::partial_sum(temp1.rbegin(), rend(temp1), rbegin(temp2));
-        auto it = std::next(temp2.begin(), 2);
+        std::partial_sum(temp1.rbegin(), temp1.rend(), temp2.rbegin());
         ndprime[0] = 0;
-        std::copy(it, end(temp2), ndprime + 1);
+        std::copy(temp2.begin() + 2, temp2.end(), ndprime + 1);
         ndprime[dmax - 1] = 0;
     }
 
