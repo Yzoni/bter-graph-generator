@@ -14,4 +14,4 @@ include_directories(bter_seq)
 
 add_subdirectory(bter_seq)
 add_subdirectory(test)
-target_link_libraries(bter_seq_run)
+target_link_libraries(bter_seq_run bter_seq)

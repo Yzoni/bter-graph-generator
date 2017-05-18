@@ -4,9 +4,10 @@
 #include <random>
 #include <iostream>
 #include "BterPhases.h"
+#include <spdlog/spdlog.h>
 
 
-namespace BTERSeq {
+namespace bter {
 
     BterPhases::BterPhases(BTERSetupResult *bterSetupResult, int dmax, double *nd, double *cd) :
             bterSetupResult(bterSetupResult), dmax(dmax), nd(nd), cd(cd), bterSamples(0, 0) {
@@ -79,6 +80,8 @@ namespace BTERSeq {
     }
 
     void BterPhases::phaseOne(int *phase_one_i, int *phase_one_j) {
+        spdlog::get("logger")->info("Started phase one");
+
         int *group_sample = new int[bterSamples.s1]();
         double *block_b = new double[bterSamples.s1];
         double *block_i = new double[bterSamples.s1];
@@ -118,9 +121,13 @@ namespace BTERSeq {
         delete[] block_b;
         delete[] block_i;
         delete[] block_n;
+
+        spdlog::get("logger")->info("Finished phase one");
     }
 
     void BterPhases::phaseTwo(int *phase_two_i, int *phase_two_j) {
+        spdlog::get("logger")->info("Started phase two");
+
         int i;
         double *id_bulk = new double[dmax];
         double *nd_bulk = new double[dmax];
@@ -131,6 +138,8 @@ namespace BTERSeq {
 
         phaseTwoNode(id_bulk, nd_bulk, phase_two_i);
         phaseTwoNode(id_bulk, nd_bulk, phase_two_j);
+
+        spdlog::get("logger")->info("Finished phase two");
     }
 
     void BterPhases::phaseTwoNode(double *id_bulk, double *nd_bulk, int *phase_two) {

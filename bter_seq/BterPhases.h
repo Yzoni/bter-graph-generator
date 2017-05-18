@@ -3,7 +3,7 @@
 
 #include "BterSetup.h"
 
-namespace BTERSeq {
+namespace bter {
 
     struct BterSamples {
         int s1, s2;

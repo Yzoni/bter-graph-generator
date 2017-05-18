@@ -3,7 +3,7 @@
 #ifndef BTER_SEQUENTIAL_BTERSEQ_H_H
 #define BTER_SEQUENTIAL_BTERSEQ_H_H
 
-namespace BTERSeq {
+namespace bter {
 
     struct BTERSetupResult {
         int *id, *ndprime;
@@ -18,6 +18,8 @@ namespace BTERSeq {
         int dmax;
 
     public:
+        int load_parameters();
+
         void compute_index_degree();
 
         void compute_degree_greater_then();

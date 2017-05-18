@@ -3,10 +3,11 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 #include "BterSetup.h"
 
-namespace BTERSeq {
+namespace bter {
 
     BTERSetup::BTERSetup(
             double *nd,
@@ -122,6 +123,9 @@ namespace BTERSeq {
                 rdfill[d] = 0;
             }
         }
+    }
 
+    int BTERSetup::load_parameters() {
+        return 0;
     }
 }

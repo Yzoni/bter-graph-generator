@@ -5,7 +5,7 @@
 
 #define DMAX 7
 
-namespace BTERSeq {
+namespace bter {
     TEST(bter_seq_test, compute_samples) {
 
         double nd[]{5, 3, 5, 4, 2, 0, 1};

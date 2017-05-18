@@ -5,7 +5,7 @@
 
 #define DMAX 7
 
-namespace BTERSeq {
+namespace bter {
 
     TEST(bter_seq_test, compute_index_degree) {
 
