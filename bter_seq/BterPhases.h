@@ -31,6 +31,9 @@ namespace BTERSeq {
 
         void phaseTwo(int *phase_two_i, int *phase_two_j);
 
+        void removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int, std::allocator<int>> *new_i,
+                                 std::vector<int, std::allocator<int>> *new_j);
+
         BterSamples bterSamples;
 
     private:

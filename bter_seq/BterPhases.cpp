@@ -172,4 +172,26 @@ namespace BTERSeq {
         delete[] phase_two_shift_bulk;
         delete[] pase_two_sz_bulk;
     }
+
+    /*
+     * Very naive implementation
+     */
+    void BterPhases::removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int> *new_i, std::vector<int> *new_j) {
+        std::vector<int>::iterator it_new_i = new_i->begin();
+        std::vector<int>::iterator it_new_j = new_j->begin();
+
+        for (int k = 0; k < length; ++k) {
+            if (i[k] != j[k]) {
+                *it_new_i = i[k];
+                *it_new_j = i[k];
+
+                std::next(it_new_i);
+                std::next(it_new_j);
+            }
+        }
+
+
+        new_i->resize(new_i->size());
+        new_j->resize(new_j->size());
+    }
 }
