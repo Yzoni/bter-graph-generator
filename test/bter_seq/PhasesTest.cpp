@@ -8,9 +8,10 @@
 namespace BTERSeq {
     TEST(bter_seq_test, compute_samples) {
 
-        double nd[]{5,3,5,4,2,0,1};
+        double nd[]{5, 3, 5, 4, 2, 0, 1};
 
-        double cd[]{0,0.979080080307294,0.362202768314448,0.145664469924314,0.038552033439531,0.014016962863169,0.005891345155566};
+        double cd[]{0, 0.979080080307294, 0.362202768314448, 0.145664469924314, 0.038552033439531, 0.014016962863169,
+                    0.005891345155566};
 
         double beta = 1;
         int dmax = DMAX;
@@ -47,9 +48,10 @@ namespace BTERSeq {
 
     TEST(bter_seq_test, compute_phase_one) {
 
-        double nd[]{5,3,5,4,2,0,1};
+        double nd[]{5, 3, 5, 4, 2, 0, 1};
 
-        double cd[]{0,0.979080080307294,0.362202768314448,0.145664469924314,0.038552033439531,0.014016962863169,0.005891345155566};
+        double cd[]{0, 0.979080080307294, 0.362202768314448, 0.145664469924314, 0.038552033439531, 0.014016962863169,
+                    0.005891345155566};
 
         double beta = 1;
         int dmax = DMAX;
@@ -83,7 +85,8 @@ namespace BTERSeq {
         bterPhases.phaseOne(phase_one_i, phase_one_j);
 
         std::cerr << "\n BterPhases 1" << std::endl;
-        for (int i = 0; i < bterPhases.bterSamples.s1; ++i) std::cerr << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
+        for (int i = 0; i < bterPhases.bterSamples.s1; ++i)
+            std::cerr << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
 
         delete[] phase_one_i;
         delete[] phase_one_j;
@@ -128,7 +131,8 @@ namespace BTERSeq {
         bterPhases.phaseTwo(phase_two_i, phase_two_j);
 
         std::cerr << "\n BterPhases 2" << std::endl;
-        for (int i = 0; i < bterPhases.bterSamples.s2; ++i) std::cerr << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
+        for (int i = 0; i < bterPhases.bterSamples.s2; ++i)
+            std::cerr << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
 
         delete[] phase_two_i;
         delete[] phase_two_j;
