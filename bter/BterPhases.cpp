@@ -79,7 +79,6 @@ namespace bter {
     }
 
     void BterPhases::phaseOne(int *phase_one_i, int *phase_one_j) {
-
         int *group_sample = new int[bterSamples.s1]();
         double *block_b = new double[bterSamples.s1];
         double *block_i = new double[bterSamples.s1];

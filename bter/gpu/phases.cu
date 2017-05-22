@@ -1,7 +1,7 @@
 #include <cuda.h>
 #include <stdio.h>
 
-__global__ void print(char *a,int N)
+__global__ void phase_one(char *a,int N)
 {
     char p[12]="Hello CUDA\n";
     int idx=blockIdx.x*blockDim.x + threadIdx.x;
@@ -11,7 +11,11 @@ __global__ void print(char *a,int N)
     }
 }
 
-void cudaTestFunction() {
+__global__ void phase_two() {
+
+}
+
+void cuda_wrapper_phase_one() {
         char *a_h,*a_d;
     const int N=12;
     size_t size=N*sizeof(char);
@@ -24,8 +28,7 @@ void cudaTestFunction() {
     cudaMemcpy(a_d,a_h,size,cudaMemcpyHostToDevice);
     int blocksize=4;
     int nblock=N/blocksize+(N%blocksize==0?0:1);
-    print<<<nblock,blocksize>>>(a_d,N)
-                              ;
+    print<<<nblock,blocksize>>>(a_d,N);
     cudaMemcpy(a_h,a_d,sizeof(char)*N,cudaMemcpyDeviceToHost)
             ;
     for(int i=0;i<N;i++)
@@ -34,4 +37,8 @@ void cudaTestFunction() {
     }
     free(a_h);
     cudaFree(a_d);
+}
+
+void cuda_wrapper_phase_two() {
+
 }

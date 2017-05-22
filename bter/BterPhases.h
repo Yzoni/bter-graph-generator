@@ -3,6 +3,10 @@
 
 #include "BterSetup.h"
 
+void cuda_wrapper_phase_one();
+
+void cuda_wrapper_phase_two();
+
 namespace bter {
 
     struct BterSamples {

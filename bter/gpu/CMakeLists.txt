@@ -1,5 +1,5 @@
 project(bter_gpu)
 
-cuda_add_library(bter_gpu test.cu)
+cuda_add_library(bter_gpu phases.cu)
 
 target_link_libraries(bter_gpu ${CUDA_LIBRARIES})

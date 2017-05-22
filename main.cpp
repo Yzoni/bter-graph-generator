@@ -10,13 +10,10 @@ void setupLogger() {
 
 }
 
-extern void cudaTestFunction();
 
 int main() {
 
     setupLogger();
-
-    cudaTestFunction();
 
     double nd[]{2, 4, 7, 4, 1, 1, 1};
     double cd[]{0, 0.939066565437604, 0.327035150501861, 0.113901512792621, 0.038132502986394,
@@ -49,7 +46,7 @@ int main() {
 
     int *phase_one_i = new int[bterPhases.bterSamples.s1];
     int *phase_one_j = new int[bterPhases.bterSamples.s1];
-    bterPhases.phaseTwo(phase_one_i, phase_one_j);
+    bterPhases.phaseOne(phase_one_i, phase_one_j);
 
     int *phase_two_i = new int[bterPhases.bterSamples.s2];
     int *phase_two_j = new int[bterPhases.bterSamples.s2];

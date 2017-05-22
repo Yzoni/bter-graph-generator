@@ -7,14 +7,14 @@ set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
 
 project(BTER_sequential)
 
+find_package(CUDA)
+
 set(SOURCE_FILES main.cpp)
 add_executable(bter_seq_run ${SOURCE_FILES})
 
-find_package(CUDA)
+include_directories(bter/gpu bter)
 
-include_directories(bter_seq bter_gpu)
-
-add_subdirectory(bter_seq)
-add_subdirectory(bter_gpu)
+add_subdirectory(bter/gpu)
+add_subdirectory(bter)
 add_subdirectory(test)
-target_link_libraries(bter_seq_run bter_seq bter_gpu)
+target_link_libraries(bter_seq_run bter)
