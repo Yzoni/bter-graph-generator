@@ -19,7 +19,7 @@ class ParameterSearch:
         else:
             y1 = 0
 
-        a = np.dot(np.linspace(1, self.max_deg_bound, self.max_deg_bound), p)
+        a = np.dot(np.arange(1, self.max_deg_bound + 1, 1), p)
         y2 = np.power(np.subtract(a, self.avg_deg_target), 2)
 
         y = y1 + y2
@@ -76,17 +76,19 @@ class ParameterSearch:
         handle = lambda x: self._compute_objective(nd, x)
         xopt = scipy.optimize.fmin(func=handle, x0=[0.5])
 
-        return xopt[0]
+        return xopt[0], np.where(nd > 0)[0][-1]
 
     def _compute_objective(self, nd, xi):
         maxd = nd.size
-        ccd_mean = self.max_ccd_target * np.exp(- np.transpose(np.linspace(0, maxd - 1, maxd - 1)) * xi)
-        ccd_mean = np.insert(ccd_mean, 0, 0)
+        ccd_mean = self.max_ccd_target * np.exp(- np.transpose(np.arange(0, maxd, 1) * xi))
 
-        n_wedges = np.transpose(nd) * np.linspace(1, maxd, maxd) * ((np.linspace(1, maxd, maxd) - 1) / 2)
+        n_wedges = np.transpose(nd) * np.arange(1, maxd + 1, 1) * ((np.arange(1, maxd + 1, 1) - 1) / 2)
         gcc_xi = np.dot(n_wedges, ccd_mean) / np.sum(n_wedges)
         y = np.abs(self.gcc_target - gcc_xi)
         return y
+
+    def target_clustering_coefficient_per_degree(self, xi, max_degree):
+        return self.max_ccd_target * np.exp(-np.arange(0, max_degree + 1, 1) * xi)
 
     def write_to_file(self, file_name, nd, ccd):
         with open(file_name, 'w') as f:

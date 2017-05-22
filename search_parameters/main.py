@@ -18,8 +18,9 @@ if __name__ == '__main__':
 
     print(nd)
 
-    xi = p.optimal_xi(nd, pdf)
+    xi, max_degree = p.optimal_xi(nd, pdf)
 
-    ccd = []
+    ccd = p.target_clustering_coefficient_per_degree(xi, max_degree)
+    print(ccd)
 
     p.write_to_file('parameters.txt', nd, ccd)
