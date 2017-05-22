@@ -3,26 +3,24 @@ import scipy.optimize
 
 
 class ParameterSearch:
-    def __init__(self, number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target):
+    def __init__(self, number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau):
         self.n = number_of_nodes
         self.max_deg_bound = max_deg_bound
         self.avg_deg_target = avg_deg_target
         self.max_ccd_target = max_ccd_target
         self.gcc_target = gcc_target
+        self.tau = tau
 
-        self.ccd = []
-        self.nd = []
-
-    def evaluate_degree_distribution(self, alpha, beta, bnd, avgdeg):
+    def evaluate_degree_distribution(self, alpha, beta):
         p = self.discrete_generalized_log_normal_probability(alpha, beta)
 
-        if p[-1] > bnd:
-            y1 = np.power((np.exp(1 + p[-1] - bnd)), 2) - 1
+        if p[-1] > self.tau:
+            y1 = np.power((np.exp(1 + p[-1] - self.tau)), 2) - 1
         else:
             y1 = 0
 
         a = np.dot(np.linspace(1, self.max_deg_bound, self.max_deg_bound), p)
-        y2 = np.power(np.subtract(a, avgdeg), 2)
+        y2 = np.power(np.subtract(a, self.avg_deg_target), 2)
 
         y = y1 + y2
 
@@ -40,8 +38,8 @@ class ParameterSearch:
         p = np.exp(-np.power(np.divide(N, alpha), beta))
         return np.divide(p, np.sum(p))
 
-    def degree_distribution_parameter_search(self, tau, avgdeg):
-        handle = lambda x: self.evaluate_degree_distribution(x[0], x[1], tau, avgdeg)
+    def degree_distribution_parameter_search(self):
+        handle = lambda x: self.evaluate_degree_distribution(x[0], x[1])
         xopt = scipy.optimize.fmin(func=handle, x0=[2, 2])
         return xopt
 
@@ -53,8 +51,9 @@ class ParameterSearch:
         :param cutoff:
         :return:
         """
+
+        dd1 = np.round(self.n * pdf[:cutoff])
         n1 = np.sum(cutoff)  # Todo
-        dd1 = []
 
         n2 = self.n - n1
         tail_pdf = pdf[cutoff:] / np.sum(pdf[cutoff:])
@@ -71,17 +70,30 @@ class ParameterSearch:
 
         return np.append(dd1, dd2)
 
-    def optimal_xi(self, nd):
-        max_degree = np.where(nd > 0.1)[0][-1]
+    def optimal_xi(self, nd, pdf):
+        self.evaluate_degree_distribution(self.n, pdf)
 
-        pass
+        handle = lambda x: self._compute_objective(nd, x)
+        xopt = scipy.optimize.fmin(func=handle, x0=[0.5])
 
-    def write_to_file(self, file_name):
+        return xopt[0]
+
+    def _compute_objective(self, nd, xi):
+        maxd = nd.size
+        ccd_mean = self.max_ccd_target * np.exp(- np.transpose(np.linspace(0, maxd - 1, maxd - 1)) * xi)
+        ccd_mean = np.insert(ccd_mean, 0, 0)
+
+        n_wedges = np.transpose(nd) * np.linspace(1, maxd, maxd) * ((np.linspace(1, maxd, maxd) - 1) / 2)
+        gcc_xi = np.dot(n_wedges, ccd_mean) / np.sum(n_wedges)
+        y = np.abs(self.gcc_target - gcc_xi)
+        return y
+
+    def write_to_file(self, file_name, nd, ccd):
         with open(file_name, 'w') as f:
-            f.write(self.n + '\n')
-            for e in self.nd:
-                f.write(e + ' ')
+            f.write(str(self.n) + '\n')
+            for e in nd:
+                f.write(str(e) + ' ')
             f.write('\n')
-            for e in self.ccd:
-                f.write(e + ' ')
+            for e in ccd:
+                f.write(str(e) + ' ')
             f.write('\n')
