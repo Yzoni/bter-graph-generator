@@ -46,11 +46,11 @@ int main() {
 
     int *phase_one_i = new int[bterPhases.bterSamples.s1];
     int *phase_one_j = new int[bterPhases.bterSamples.s1];
-    bterPhases.phaseOne(phase_one_i, phase_one_j);
+    bterPhases.phaseOneSeq(phase_one_i, phase_one_j);
 
     int *phase_two_i = new int[bterPhases.bterSamples.s2];
     int *phase_two_j = new int[bterPhases.bterSamples.s2];
-    bterPhases.phaseTwo(phase_two_i, phase_two_j);
+    bterPhases.phaseTwoSeq(phase_two_i, phase_two_j);
 
 //    std::chrono::time_point<std::chrono::system_clock> start, end;
 //    start = std::chrono::system_clock::now();

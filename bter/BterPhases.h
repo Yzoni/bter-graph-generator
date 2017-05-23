@@ -7,7 +7,8 @@ void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
                             double *block_b, double *block_i, double *block_n,
                             int length);
 
-void cuda_wrapper_phase_two();
+void cuda_wrapper_phase_two(int *phase_two_i, int *phase_two_j,
+                            int length);
 
 namespace bter {
 
@@ -39,9 +40,17 @@ namespace bter {
 
         void phaseOneGPU(int *phase_one_i, int *phase_one_j);
 
-        void phaseOne(int *phase_one_i, int *phase_one_j);
+        void phaseTwoNodePrepare(double *id_bulk, double *nd_bulk,
+                                 double *phase_two_shift_fill, double *phase_two_sz_fill,
+                                 double *phase_two_shift_bulk, double *phase_two_sz_bulk);
 
-        void phaseTwo(int *phase_two_i, int *phase_two_j);
+        void phaseTwoSeq(int *phase_two_i, int *phase_two_j);
+
+        void phaseTwoGpu(int *phase_two_i, int *phase_one_j);
+
+        void phaseTwoNodeSeq(double *id_bulk, double *nd_bulk, int *phase_two);
+
+        void phaseTwoNodeGpu(double *id_bulk, double *nd_bulk, int *phase_two);
 
 //        void removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int, std::allocator<int>> *new_i,
 //                                 vector<int, std::allocator<int>> *new_j);

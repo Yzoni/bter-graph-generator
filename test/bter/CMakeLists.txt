@@ -7,4 +7,4 @@ add_executable(runTests
         PhasesTest.cpp)
 
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)
-target_link_libraries(runTests bter_seq)
+target_link_libraries(runTests bter)

@@ -25,35 +25,28 @@ __global__ void phase_one_shift(double *block_b, double *block_i, double *block_
 
 }
 
-__global__ void
-phase_one_i(int *phase_one_i, double *block_b, double *block_i, double *block_n, int *shift, curandState *state) {
+__global__ void phase_one_i(int *i, double *block_b, double *block_i, double *block_n, int *shift, curandState *state) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     // Choose first node
-    phase_one_i[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * block_n[idx]) + shift);
+    i[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * block_n[idx]) + shift[idx]);
 
 }
 
-__global__ void
-phase_one_j(int *phase_one_i, int *phase_one_j, double *block_b, double *block_i, double *block_n, int *shift,
-            curandState *state) {
+__global__ void phase_one_j(int *i, int *j, double *block_b, double *block_i, double *block_n, int *shift,
+                            curandState *state) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
     // Choose second node
     // "Without replacement"
-    phase_one_j[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * (block_n[idx] - 1)) + shift);
+    j[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * (block_n[idx] - 1)) + shift[idx]);
 
     // Remove loops
-    if (phase_one_j[idx] >= phase_one_i[idx]) {
-        ++phase_one_j[idx];
+    if (j[idx] >= i[idx]) {
+        ++j[idx];
     }
 }
 
-
-__global__ void phase_two() {
-
-}
-
-void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
+void cuda_wrapper_phase_one(int *i, int *j,
                             double *block_b, double *block_i, double *block_n,
                             int length) {
     curandState *devStates;
@@ -73,9 +66,6 @@ void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
     gpuErrchk(cudaMalloc((void **) &cuda_block_i, size_input));
     gpuErrchk(cudaMalloc((void **) &cuda_j, size_input));
 
-    gpuErrchk(cudaMemcpy(cuda_i, phase_one_i, size_output, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(cuda_j, phase_one_i, size_output, cudaMemcpyHostToDevice));
-
     gpuErrchk(cudaMemcpy(cuda_block_b, block_b, size_input, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(cuda_block_i, block_i, size_input, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(cuda_block_n, block_n, size_input, cudaMemcpyHostToDevice));
@@ -84,35 +74,25 @@ void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
     int *cuda_shift;
     gpuErrchk(cudaMalloc((void **) &cuda_shift, size_input));
 
-    int blocksize = 4;
-    int nblock = N / blocksize + (N % blocksize == 0 ? 0 : 1);
+    int blocksize = 256;
+    int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
     setup_random_kernel <<< nblock, blocksize >>> (devStates, time(NULL));
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    phase_one_shift <<< nblock, blocksize >>> (
-            cuda_block_b, cuda_block_i, cuda_block_n,
-                    cuda_shift, devStates);
+    phase_one_shift << < nblock, blocksize >> > (cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates);
 
-    phase_one_i <<< nblock, blocksize >>> (cuda_i,
-            cuda_block_b, cuda_block_i, cuda_block_n,
-            length, devStates);
+    phase_one_i << < nblock, blocksize >> > (cuda_i, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    phase_one_j <<< nblock, blocksize >>> (cuda_i, cuda_j,
-            cuda_block_b, cuda_block_i, cuda_block_n,
-            length, devStates);
+    phase_one_j << < nblock, blocksize >> >
+                             (cuda_i, cuda_j, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    cudaMemcpy(phase_one_i, cuda_i, size_output, cudaMemcpyDeviceToHost);
-    cudaMemcpy(phase_one_j, cuda_j, size_output, cudaMemcpyDeviceToHost);
-
-    cudaMemcpy(block_b, cuda_block_b, size_output, cudaMemcpyDeviceToHost);
-    cudaMemcpy(block_i, cuda_block_i, size_output, cudaMemcpyDeviceToHost);
-    cudaMemcpy(block_n, cuda_block_n, size_output, cudaMemcpyDeviceToHost);
-
+    cudaMemcpy(i, cuda_i, size_output, cudaMemcpyDeviceToHost);
+    cudaMemcpy(j, cuda_j, size_output, cudaMemcpyDeviceToHost);
 
     // FREE
     cudaFree(cuda_shift);

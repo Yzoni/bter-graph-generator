@@ -82,7 +82,9 @@ namespace bter {
 
         int *phase_one_i = new int[bterPhases.bterSamples.s1];
         int *phase_one_j = new int[bterPhases.bterSamples.s1];
-        bterPhases.phaseOne(phase_one_i, phase_one_j);
+bterPhases.
+phaseOneSeq(phase_one_i, phase_one_j
+);
 
         std::cerr << "\n BterPhases 1" << std::endl;
         for (int i = 0; i < bterPhases.bterSamples.s1; ++i)
@@ -128,7 +130,9 @@ namespace bter {
 
         int *phase_two_i = new int[bterPhases.bterSamples.s2];
         int *phase_two_j = new int[bterPhases.bterSamples.s2];
-        bterPhases.phaseTwo(phase_two_i, phase_two_j);
+bterPhases.
+phaseTwoSeq(phase_two_i, phase_two_j
+);
 
         std::cerr << "\n BterPhases 2" << std::endl;
         for (int i = 0; i < bterPhases.bterSamples.s2; ++i)
