@@ -13,10 +13,11 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 }
 
 __global__ void setup_random_kernel(curandState *state, unsigned long seed) {
-    curand_init(seed, threadIdx.x, 0, &state[id]);
+    int idx = blockIdx.x * threadIdx.x * blockDim.x;
+    curand_init(seed, idx, 0, &state[idx]);
 }
 
-__global__ void phase_one_shift(double *block_b, double *block_i, double *block_n, int *shift) {
+__global__ void phase_one_shift(double *block_b, double *block_i, double *block_n, int *shift, curandState *state) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     // Compute block and compute its offset
     shift[idx] = (int) __double2int_rn(

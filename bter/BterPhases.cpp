@@ -144,7 +144,7 @@ namespace bter {
         delete[] block_n;
     }
 
-    void BterPhases::phaseTwo(int *phase_two_i, int *phase_two_j) {
+    void BterPhases::phaseTwoSeq(int *phase_two_i, int *phase_two_j) {
 
         int i;
         double *id_bulk = new double[dmax];
@@ -154,21 +154,31 @@ namespace bter {
             nd_bulk[i] = nd[i] - bterSetupResult->ndfill[i];
         }
 
-        phaseTwoNode(id_bulk, nd_bulk, phase_two_i);
-        phaseTwoNode(id_bulk, nd_bulk, phase_two_j);
+        phaseTwoNodeSeq(id_bulk, nd_bulk, phase_two_i);
+        phaseTwoNodeSeq(id_bulk, nd_bulk, phase_two_j);
 
     }
 
-    void BterPhases::phaseTwoNode(double *id_bulk, double *nd_bulk, int *phase_two) {
+    void BterPhases::phaseTwoGpu(int *phase_two_i, int *phase_one_j) {
+
+        int i;
+        double *id_bulk = new double[dmax];
+        double *nd_bulk = new double[dmax];
+        for (i = 0; i < dmax; ++i) {
+            id_bulk[i] = bterSetupResult->id[i] + bterSetupResult->ndfill[i];
+            nd_bulk[i] = nd[i] - bterSetupResult->ndfill[i];
+        }
+
+        phaseTwoNodeGpu(id_bulk, nd_bulk, phase_two_i);
+        phaseTwoNodeGpu(id_bulk, nd_bulk, phase_two_j);
+    }
+
+    void BterPhases::phaseTwoNodePrepare(double *id_bulk, double *nd_bulk,
+            double *phase_two_shift_fill, double *phase_two_sz_fill, double *phase_two_shift_bulk, double *phase_two_sz_bulk) {
         int *degree_sample = new int[bterSamples.s2]();
 
         // Excess degree sample
         randomSample(bterSetupResult->wd, bterSamples.s2, degree_sample);
-
-        double *phase_two_shift_fill = new double[bterSamples.s2];
-        double *phase_two_sz_fill = new double[bterSamples.s2];
-        double *phase_two_shift_bulk = new double[bterSamples.s2];
-        double *pase_two_sz_bulk = new double[bterSamples.s2];
 
         int i, sample;
         for (i = 0; i < bterSamples.s2; ++i) {
@@ -178,6 +188,46 @@ namespace bter {
             phase_two_shift_bulk[i] = id_bulk[sample];
             pase_two_sz_bulk[i] = nd_bulk[sample];
         }
+    }
+
+    void BterPhases::phaseTwoNodeSeq(double *id_bulk, double *nd_bulk, int *phase_two) {
+
+        double *phase_two_shift_fill = new double[bterSamples.s2];
+        double *phase_two_sz_fill = new double[bterSamples.s2];
+        double *phase_two_shift_bulk = new double[bterSamples.s2];
+        double *pase_two_sz_bulk = new double[bterSamples.s2];
+
+        phaseTwoNodePrepare(phase_two_shift_fill, phase_two_sz_fill, phase_two_shift_bulk, phase_two_sz_bulk);        
+
+        // TODO GPU
+        double phase_two_fill, phase_two_bulk, r;
+        for (i = 0; i < bterSamples.s2; ++i) {
+            phase_two_fill = phase_two_shift_fill[i] + floor(randomUnified(0, 1) * phase_two_sz_fill[i]);
+            phase_two_bulk = phase_two_shift_bulk[i] + floor(randomUnified(0, 1) * pase_two_sz_bulk[i]);
+
+            r = randomUnified(0, 1);
+            if (r < phase_two_fill) {
+                phase_two[i] = (int) std::round(phase_two_fill);
+            } else {
+                phase_two[i] = (int) std::round(phase_two_bulk);
+            }
+        }
+
+        delete[] phase_two_shift_fill;
+        delete[] phase_two_sz_fill;
+        delete[] phase_two_shift_bulk;
+        delete[] pase_two_sz_bulk;
+    }
+
+
+    void BterPhases::phaseTwoNodeGpu(double *id_bulk, double *nd_bulk, int *phase_two) {
+
+        double *phase_two_shift_fill = new double[bterSamples.s2];
+        double *phase_two_sz_fill = new double[bterSamples.s2];
+        double *phase_two_shift_bulk = new double[bterSamples.s2];
+        double *pase_two_sz_bulk = new double[bterSamples.s2];
+
+        phaseTwoNodePrepare(phase_two_shift_fill, phase_two_sz_fill, phase_two_shift_bulk, phase_two_sz_bulk);        
 
         // TODO GPU
         double phase_two_fill, phase_two_bulk, r;
