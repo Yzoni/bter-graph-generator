@@ -10,6 +10,6 @@ set(SOURCE_FILES
         BterPhases.cpp
         )
 
-add_library(bter_seq STATIC ${SOURCE_FILES} ${HEADER_FILES})
+add_library(bter STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
-target_link_libraries(bter_seq gpu)
+target_link_libraries(bter bter_gpu)
