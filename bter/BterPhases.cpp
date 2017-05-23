@@ -78,12 +78,7 @@ namespace bter {
         delete[] r;
     }
 
-    void BterPhases::phaseOne(int *phase_one_i, int *phase_one_j) {
-        int *group_sample = new int[bterSamples.s1]();
-        double *block_b = new double[bterSamples.s1];
-        double *block_i = new double[bterSamples.s1];
-        double *block_n = new double[bterSamples.s1];
-
+    void BterPhases::phaseOnePrepare(int *group_sample, double *block_b, double *block_i, double *block_n) {
         // Get group samples
         randomSample(bterSetupResult->wg, bterSamples.s1, group_sample);
 
@@ -94,9 +89,18 @@ namespace bter {
             block_i[k] = bterSetupResult->ig[sample]; // Number of affinity block in group g
             block_n[k] = bterSetupResult->ng[sample]; // Number of of nodes in group g
         }
+    }
 
-        // TODO GPU
-        int shift;
+    void BterPhases::phaseOneSeq(int *phase_one_i, int *phase_one_j) {
+
+        int *group_sample = new int[bterSamples.s1]();
+        double *block_b = new double[bterSamples.s1];
+        double *block_i = new double[bterSamples.s1];
+        double *block_n = new double[bterSamples.s1];
+
+        phaseOnePrepare(group_sample, block_b, block_i, block_n);
+
+        int k, shift;
         for (k = 0; k < bterSamples.s1; ++k) {
             // Compute block and compute its offset
             shift = (int) std::round(block_i[k] + floor(randomUnified(0, 1) * block_b[k]) * block_n[k]);
@@ -119,6 +123,25 @@ namespace bter {
         delete[] block_i;
         delete[] block_n;
 
+    }
+
+    void BterPhases::phaseOneGPU(int *phase_one_i, int *phase_one_j) {
+
+        int *group_sample = new int[bterSamples.s1]();
+        double *block_b = new double[bterSamples.s1];
+        double *block_i = new double[bterSamples.s1];
+        double *block_n = new double[bterSamples.s1];
+
+        phaseOnePrepare(group_sample, block_b, block_i, block_n);
+
+        cuda_wrapper_phase_one(phase_one_i, phase_one_j,
+                               block_b, block_i, block_n,
+                               bterSamples.s1);
+
+        delete[] group_sample;
+        delete[] block_b;
+        delete[] block_i;
+        delete[] block_n;
     }
 
     void BterPhases::phaseTwo(int *phase_two_i, int *phase_two_j) {
@@ -179,22 +202,22 @@ namespace bter {
     /*
      * Very naive implementation
      */
-    void BterPhases::removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int> *new_i, std::vector<int> *new_j) {
-        std::vector<int>::iterator it_new_i = new_i->begin();
-        std::vector<int>::iterator it_new_j = new_j->begin();
-
-        for (int k = 0; k < length; ++k) {
-            if (i[k] != j[k]) {
-                *it_new_i = i[k];
-                *it_new_j = i[k];
-
-                std::next(it_new_i);
-                std::next(it_new_j);
-            }
-        }
-
-
-        new_i->resize(new_i->size());
-        new_j->resize(new_j->size());
-    }
+//    void BterPhases::removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int> *new_i, std::vector<int> *new_j) {
+//        std::vector<int>::iterator it_new_i = new_i->begin();
+//        std::vector<int>::iterator it_new_j = new_j->begin();
+//
+//        for (int k = 0; k < length; ++k) {
+//            if (i[k] != j[k]) {
+//                *it_new_i = i[k];
+//                *it_new_j = i[k];
+//
+//                std::next(it_new_i);
+//                std::next(it_new_j);
+//            }
+//        }
+//
+//
+//        new_i->resize(new_i->size());
+//        new_j->resize(new_j->size());
+//    }
 }

@@ -3,7 +3,9 @@
 
 #include "BterSetup.h"
 
-void cuda_wrapper_phase_one();
+void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
+                            double *block_b, double *block_i, double *block_n,
+                            int length);
 
 void cuda_wrapper_phase_two();
 
@@ -31,12 +33,18 @@ namespace bter {
 
         void computeSamples();
 
+        void phaseOnePrepare(int *group_sample, double *block_b, double *block_i, double *block_n);
+
+        void phaseOneSeq(int *phase_one_i, int *phase_one_j);
+
+        void phaseOneGPU(int *phase_one_i, int *phase_one_j);
+
         void phaseOne(int *phase_one_i, int *phase_one_j);
 
         void phaseTwo(int *phase_two_i, int *phase_two_j);
 
-        void removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int, std::allocator<int>> *new_i,
-                                 std::vector<int, std::allocator<int>> *new_j);
+//        void removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int, std::allocator<int>> *new_i,
+//                                 vector<int, std::allocator<int>> *new_j);
 
         BterSamples bterSamples;
 

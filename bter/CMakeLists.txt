@@ -1,4 +1,4 @@
-project(bter_seq)
+project(bter_lib)
 
 set(HEADER_FILES
         BterSetup.h
