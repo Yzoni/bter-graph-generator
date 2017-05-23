@@ -12,4 +12,4 @@ set(SOURCE_FILES
 
 add_library(bter STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
-target_link_libraries(bter gpu)
+target_link_libraries(bter bter_gpu)
