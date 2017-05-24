@@ -1,6 +1,6 @@
 #include <iostream>
 #include <assert.h>
-#include <python3.5/Python.h>
+#include <python3.4m/Python.h>
 #include <vector>
 
 #include "BterPhases.h"
@@ -14,10 +14,12 @@ void setupLogger() {
 void setupEnvironment() {
     char *dirname = get_current_dir_name();
     std::string dir = std::string(dirname);
-    std::string full_dir = (dir + std::string("/untitled"));
-    const char *path = full_dir.c_str();
+//    std::string full_dir = (dir + std::string("/parameters"));
+    const char *path = dir.c_str();
 
     setenv("PYTHONPATH", path, 1);
+    std::cout << "Python path set to: " << std::endl;
+    std::cout << path << std::endl;
 }
 
 // PyObject -> Vector
@@ -46,6 +48,8 @@ int main() {
 
     setupLogger();
 
+    setupEnvironment();
+
     Py_Initialize();
 
     PyObject *module = PyImport_ImportModule("parameters.search");
@@ -69,20 +73,20 @@ int main() {
     Py_Finalize();
 
     double* nd = &nd_vector[0];
-    double* ccd = &ccd_vector[0];
+    double *cd = &ccd_vector[0];
 
     double beta = 1;
-    int dmax = nd.size();
+    int dmax = nd_vector.size();
 
-    int id[dmax] = new int[dmax];
-    double wd[DMAX] = new double[dmax];
-    double rdfill[DMAX] = new double[dmax];
-    double ndfill[DMAX] = new double[dmax];
-    double wg[DMAX] = new double[dmax];
-    double ig[DMAX] = new double[dmax];
-    double bg[DMAX] = new double[dmax];
-    double ng[DMAX] = new double[dmax];
-    int ndprime[DMAX] = new double[dmax];
+    int *id = new int[dmax];
+    double *wd = new double[dmax];
+    double *rdfill = new double[dmax];
+    double *ndfill = new double[dmax];
+    double *wg = new double[dmax];
+    double *ig = new double[dmax];
+    double *bg = new double[dmax];
+    double *ng = new double[dmax];
+    int *ndprime = new int[dmax];
 
     BTERSetupResult bterSetupResult{
             id, ndprime,
