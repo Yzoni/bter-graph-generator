@@ -11,8 +11,8 @@ project(bter_project)
 find_package(CUDA)
 
 set(PYTHON_VERSION 3.4)
-set(PYTHON_INCLUDE_DIR "/usr/include/python3.4m")
-set(PYTHON_LIBRARY "/usr/lib64/libpython3.4m.so.1.0")
+set(PYTHON_INCLUDE_DIR "/cm/shared/package/python/3.5.2/include/python3.5m")
+set(PYTHON_LIBRARY "/cm/shared/package/python/3.5.2/lib/libpython3.5m.so.1.0")
 
 set(Python_ADDITIONAL_VERSIONS 3.4)
 find_package(PythonLibs 3.4 REQUIRED)
