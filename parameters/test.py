@@ -1,7 +1,8 @@
 import unittest
+
 import numpy as np
 
-from parameter_search import ParameterSearch
+from parameters.search import ParameterSearch
 
 
 class TestParameters(unittest.TestCase):

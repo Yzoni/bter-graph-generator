@@ -11,6 +11,18 @@ class ParameterSearch:
         self.gcc_target = gcc_target
         self.tau = tau
 
+    @staticmethod
+    def run(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau):
+        p = ParameterSearch(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau)
+        alpha, beta = p.degree_distribution_parameter_search()
+        pdf = p.discrete_generalized_log_normal_probability(alpha, beta)
+        nd = p.generate_degree_distribution(pdf)
+        xi, max_degree = p.optimal_xi(nd, pdf)
+
+        ccd = p.target_clustering_coefficient_per_degree(xi, max_degree)
+
+        return nd, ccd
+
     def evaluate_degree_distribution(self, alpha, beta):
         p = self.discrete_generalized_log_normal_probability(alpha, beta)
 
@@ -90,9 +102,9 @@ class ParameterSearch:
     def target_clustering_coefficient_per_degree(self, xi, max_degree):
         return self.max_ccd_target * np.exp(-np.arange(0, max_degree + 1, 1) * xi)
 
-    def write_to_file(self, file_name, nd, ccd):
+    @staticmethod
+    def write_to_file(file_name, nd, ccd):
         with open(file_name, 'w') as f:
-            f.write(str(self.n) + '\n')
             for e in nd:
                 f.write(str(e) + ' ')
             f.write('\n')
