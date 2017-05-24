@@ -14,7 +14,6 @@ void setupLogger() {
 void setupEnvironment() {
     char *dirname = get_current_dir_name();
     std::string dir = std::string(dirname);
-//    std::string full_dir = (dir + std::string("/parameters"));
     const char *path = dir.c_str();
 
     setenv("PYTHONPATH", path, 1);
@@ -23,23 +22,17 @@ void setupEnvironment() {
 }
 
 // PyObject -> Vector
-std::vector<double> listTupleToVector(PyObject *incoming) {
+std::vector<double> pyListToVector(PyObject *incoming) {
     std::vector<double> data;
-    if (PyTuple_Check(incoming)) {
-        for (Py_ssize_t i = 0; i < PyTuple_Size(incoming); i++) {
-            PyObject *value = PyTuple_GetItem(incoming, i);
+    if (PyList_Check(incoming)) {
+        for (Py_ssize_t i = 0; i < PyList_Size(incoming); i++) {
+            PyObject *value = PyList_GetItem(incoming, i);
             data.push_back(PyFloat_AsDouble(value));
         }
     } else {
-        if (PyList_Check(incoming)) {
-            for (Py_ssize_t i = 0; i < PyList_Size(incoming); i++) {
-                PyObject *value = PyList_GetItem(incoming, i);
-                data.push_back(PyFloat_AsDouble(value));
-            }
-        } else {
-            std::cerr << "Passed PyObject pointer was not a list or tuple!" << std::endl;
-        }
+        std::cerr << "Passed PyObject pointer was not a list or tuple!" << std::endl;
     }
+
     return data;
 }
 
@@ -72,7 +65,7 @@ int main() {
 
     Py_Finalize();
 
-    double* nd = &nd_vector[0];
+    double *nd = &nd_vector[0];
     double *cd = &ccd_vector[0];
 
     double beta = 1;
@@ -107,6 +100,16 @@ int main() {
     int *phase_two_i = new int[bterPhases.bterSamples.s2];
     int *phase_two_j = new int[bterPhases.bterSamples.s2];
     bterPhases.phaseTwoSeq(phase_two_i, phase_two_j);
+
+    delete[] id;
+    delete[] wd;
+    delete[] rdfill;
+    delete[] ndfill;
+    delete[] wg;
+    delete[] ig;
+    delete[] bg;
+    delete[] ng;
+    delete[] ndprime;
 
 //    std::chrono::time_point<std::chrono::system_clock> start, end;
 //    start = std::chrono::system_clock::now();
