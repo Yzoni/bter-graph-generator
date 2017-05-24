@@ -10,8 +10,9 @@ if __name__ == '__main__':
 
     print(number_of_nodes)
 
-    nd, ccd = ParameterSearch.run(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau)
+    p = ParameterSearch(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau)
+    nd = p.run_nd(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau)
     print('nd: ' + str(nd))
-    print('ccd: ' + str(ccd))
+    # print('ccd: ' + str(ccd))
 
-    ParameterSearch.write_to_file('parameters.txt', nd, ccd)
+    # ParameterSearch.write_to_file('parameters.txt', nd, ccd)

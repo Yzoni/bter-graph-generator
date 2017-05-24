@@ -18,4 +18,6 @@ add_subdirectory(bter/gpu)
 add_subdirectory(bter)
 add_subdirectory(test)
 
+file(COPY parameters DESTINATION $<TARGET_FILE:bter_run>)
+
 target_link_libraries(bter_run bter)

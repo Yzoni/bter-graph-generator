@@ -23,6 +23,26 @@ class ParameterSearch:
 
         return nd, ccd
 
+    @staticmethod
+    def run_nd(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau):
+        p = ParameterSearch(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau)
+        alpha, beta = p.degree_distribution_parameter_search()
+        pdf = p.discrete_generalized_log_normal_probability(alpha, beta)
+        nd = p.generate_degree_distribution(pdf).tolist()
+        return nd
+
+    @staticmethod
+    def run_ccd(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau):
+        p = ParameterSearch(number_of_nodes, max_deg_bound, avg_deg_target, max_ccd_target, gcc_target, tau)
+        alpha, beta = p.degree_distribution_parameter_search()
+        pdf = p.discrete_generalized_log_normal_probability(alpha, beta)
+        nd = p.generate_degree_distribution(pdf)
+        xi, max_degree = p.optimal_xi(nd, pdf)
+
+        ccd = p.target_clustering_coefficient_per_degree(xi, max_degree).tolist()
+
+        return ccd
+
     def evaluate_degree_distribution(self, alpha, beta):
         p = self.discrete_generalized_log_normal_probability(alpha, beta)
 

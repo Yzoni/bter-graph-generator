@@ -1,8 +1,9 @@
 #include <iostream>
+#include <assert.h>
+#include <python3.5/Python.h>
+#include <vector>
 
 #include "BterPhases.h"
-
-#define DMAX 7
 
 using namespace bter;
 
@@ -10,27 +11,78 @@ void setupLogger() {
 
 }
 
+void setupEnvironment() {
+    char *dirname = get_current_dir_name();
+    std::string dir = std::string(dirname);
+    std::string full_dir = (dir + std::string("/untitled"));
+    const char *path = full_dir.c_str();
+
+    setenv("PYTHONPATH", path, 1);
+}
+
+// PyObject -> Vector
+std::vector<double> listTupleToVector(PyObject *incoming) {
+    std::vector<double> data;
+    if (PyTuple_Check(incoming)) {
+        for (Py_ssize_t i = 0; i < PyTuple_Size(incoming); i++) {
+            PyObject *value = PyTuple_GetItem(incoming, i);
+            data.push_back(PyFloat_AsDouble(value));
+        }
+    } else {
+        if (PyList_Check(incoming)) {
+            for (Py_ssize_t i = 0; i < PyList_Size(incoming); i++) {
+                PyObject *value = PyList_GetItem(incoming, i);
+                data.push_back(PyFloat_AsDouble(value));
+            }
+        } else {
+            std::cerr << "Passed PyObject pointer was not a list or tuple!" << std::endl;
+        }
+    }
+    return data;
+}
+
 
 int main() {
 
     setupLogger();
 
-    double nd[]{2, 4, 7, 4, 1, 1, 1};
-    double cd[]{0, 0.939066565437604, 0.327035150501861, 0.113901512792621, 0.038132502986394,
-                0.017869824183824, 0.005860223916729};
+    Py_Initialize();
+
+    PyObject *module = PyImport_ImportModule("parameters.search");
+    assert(module != NULL);
+
+    PyObject *klass = PyObject_GetAttrString(module, "ParameterSearch");
+    assert(klass != NULL);
+
+    PyObject *instance = PyObject_CallFunction(klass, "dddffd", 20, 10, 3, 0.95, 0.15, 1);
+    assert(instance != NULL);
+
+    PyObject *result_nd = PyObject_CallMethod(instance, "run_nd", "(iiiffi)", 20, 10, 3, 0.95, 0.15, 1);
+    assert(result_nd != NULL);
+
+    PyObject *result_ccd = PyObject_CallMethod(instance, "run_ccd", "(iiiffi)", 20, 10, 3, 0.95, 0.15, 1);
+    assert(result_ccd != NULL);
+
+    std::vector<double> nd_vector = listTupleToVector(result_nd);
+    std::vector<double> ccd_vector = listTupleToVector(result_ccd);
+
+    Py_Finalize();
+
+    double* nd = &nd_vector[0];
+    double* ccd = &ccd_vector[0];
 
     double beta = 1;
-    int dmax = DMAX;
+    int dmax = nd.size();
 
-    int id[DMAX]{};
-    double wd[DMAX]{};
-    double rdfill[DMAX]{};
-    double ndfill[DMAX]{};
-    double wg[DMAX]{};
-    double ig[DMAX]{};
-    double bg[DMAX]{};
-    double ng[DMAX]{};
-    int ndprime[DMAX]{};
+    int id[dmax] = new int[dmax];
+    double wd[DMAX] = new double[dmax];
+    double rdfill[DMAX] = new double[dmax];
+    double ndfill[DMAX] = new double[dmax];
+    double wg[DMAX] = new double[dmax];
+    double ig[DMAX] = new double[dmax];
+    double bg[DMAX] = new double[dmax];
+    double ng[DMAX] = new double[dmax];
+    int ndprime[DMAX] = new double[dmax];
 
     BTERSetupResult bterSetupResult{
             id, ndprime,
