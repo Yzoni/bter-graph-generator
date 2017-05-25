@@ -157,6 +157,8 @@ namespace bter {
         phaseTwoNodeSeq(id_bulk, nd_bulk, phase_two_i);
         phaseTwoNodeSeq(id_bulk, nd_bulk, phase_two_j);
 
+        delete[] id_bulk;
+        delete[] nd_bulk;
     }
 
     void BterPhases::phaseTwoGpu(int *phase_two_i, int *phase_two_j) {
@@ -170,6 +172,9 @@ namespace bter {
 
         phaseTwoNodeGpu(id_bulk, nd_bulk, phase_two_i);
         phaseTwoNodeGpu(id_bulk, nd_bulk, phase_two_j);
+
+        delete[] id_bulk;
+        delete[] nd_bulk;
     }
 
     void BterPhases::phaseTwoNodePrepare(double *id_bulk, double *nd_bulk,
@@ -188,6 +193,8 @@ namespace bter {
             phase_two_shift_bulk[i] = id_bulk[sample];
             phase_two_sz_bulk[i] = nd_bulk[sample];
         }
+
+        delete[] degree_sample;
     }
 
     void BterPhases::phaseTwoNodeSeq(double *id_bulk, double *nd_bulk, int *phase_two) {

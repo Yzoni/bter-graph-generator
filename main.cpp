@@ -106,7 +106,7 @@ int main() {
 
     int *phase_two_i = new int[bterPhases.bterSamples.s2];
     int *phase_two_j = new int[bterPhases.bterSamples.s2];
-    bterPhases.phaseTwoSeq(phase_two_i, phase_two_j);
+    bterPhases.phaseTwoGpu(phase_two_i, phase_two_j);
 
     std::cout << "\nPHASE ONE: \n";
     for (int i = 0; i < bterPhases.bterSamples.s1; ++i)
