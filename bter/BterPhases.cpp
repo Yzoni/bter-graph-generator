@@ -125,7 +125,7 @@ namespace bter {
 
     }
 
-    void BterPhases::phaseOneGPU(int *phase_one_i, int *phase_one_j) {
+    void BterPhases::phaseOneGpu(int *phase_one_i, int *phase_one_j) {
 
         int *group_sample = new int[bterSamples.s1]();
         double *block_b = new double[bterSamples.s1];

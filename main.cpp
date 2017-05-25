@@ -41,6 +41,9 @@ int main() {
 
     setupLogger();
 
+    /*
+     * Get parameters using python
+     */
     setupEnvironment();
 
     Py_Initialize();
@@ -60,26 +63,30 @@ int main() {
     PyObject *result_ccd = PyObject_CallMethod(instance, "run_ccd", "(iiiffi)", 20, 10, 3, 0.95, 0.15, 1);
     assert(result_ccd != NULL);
 
-    std::vector<double> nd_vector = listTupleToVector(result_nd);
-    std::vector<double> ccd_vector = listTupleToVector(result_ccd);
+    std::vector<double> nd_vector = pyListToVector(result_nd);
+    std::vector<double> ccd_vector = pyListToVector(result_ccd);
 
     Py_Finalize();
 
+    // Get pointer to start of vector array
     double *nd = &nd_vector[0];
     double *cd = &ccd_vector[0];
 
+    /*
+     * Start C++ library
+     */
     double beta = 1;
     int dmax = nd_vector.size();
 
-    int *id = new int[dmax];
-    double *wd = new double[dmax];
-    double *rdfill = new double[dmax];
-    double *ndfill = new double[dmax];
-    double *wg = new double[dmax];
-    double *ig = new double[dmax];
-    double *bg = new double[dmax];
-    double *ng = new double[dmax];
-    int *ndprime = new int[dmax];
+    int *id = new int[dmax]{};
+    double *wd = new double[dmax]{};
+    double *rdfill = new double[dmax]{};
+    double *ndfill = new double[dmax]{};
+    double *wg = new double[dmax]{};
+    double *ig = new double[dmax]{};
+    double *bg = new double[dmax]{};
+    double *ng = new double[dmax]{};
+    int *ndprime = new int[dmax]{};
 
     BTERSetupResult bterSetupResult{
             id, ndprime,
@@ -95,11 +102,21 @@ int main() {
 
     int *phase_one_i = new int[bterPhases.bterSamples.s1];
     int *phase_one_j = new int[bterPhases.bterSamples.s1];
-    bterPhases.phaseOneSeq(phase_one_i, phase_one_j);
+    bterPhases.phaseOneGpu(phase_one_i, phase_one_j);
 
     int *phase_two_i = new int[bterPhases.bterSamples.s2];
     int *phase_two_j = new int[bterPhases.bterSamples.s2];
     bterPhases.phaseTwoSeq(phase_two_i, phase_two_j);
+
+    std::cout << "\nPHASE ONE: \n";
+    for (int i = 0; i < bterPhases.bterSamples.s1; ++i)
+        std::cout << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
+
+    std::cout << std::endl;
+
+    std::cout << "\nPHASE TWO: \n";
+    for (int i = 0; i < bterPhases.bterSamples.s2; ++i)
+        std::cout << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
 
     delete[] id;
     delete[] wd;
@@ -110,6 +127,12 @@ int main() {
     delete[] bg;
     delete[] ng;
     delete[] ndprime;
+
+    delete[] phase_one_i;
+    delete[] phase_one_j;
+
+    delete[] phase_two_i;
+    delete[] phase_two_j;
 
 //    std::chrono::time_point<std::chrono::system_clock> start, end;
 //    start = std::chrono::system_clock::now();

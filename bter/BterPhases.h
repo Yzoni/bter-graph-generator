@@ -38,7 +38,7 @@ namespace bter {
 
         void phaseOneSeq(int *phase_one_i, int *phase_one_j);
 
-        void phaseOneGPU(int *phase_one_i, int *phase_one_j);
+        void phaseOneGpu(int *phase_one_i, int *phase_one_j);
 
         void phaseTwoNodePrepare(double *id_bulk, double *nd_bulk,
                                  double *phase_two_shift_fill, double *phase_two_sz_fill,
