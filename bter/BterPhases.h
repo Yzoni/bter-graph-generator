@@ -7,7 +7,9 @@ void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
                             double *block_b, double *block_i, double *block_n,
                             int length);
 
-void cuda_wrapper_phase_two(int *phase_two_i, int *phase_two_j,
+void cuda_wrapper_phase_two(double *phase_two_shift_fill, double *phase_two_sz_fill,
+                            double *phase_two_shift_bulk, double *phase_two_sz_bulk,
+                            int *phase_two,
                             int length);
 
 namespace bter {

@@ -232,7 +232,9 @@ namespace bter {
                             phase_two_shift_fill, phase_two_sz_fill,
                             phase_two_shift_bulk, phase_two_sz_bulk);
 
-//        cuda_wrapper_phase_two();
+        cuda_wrapper_phase_two(phase_two_shift_fill, phase_two_sz_fill,
+                               phase_two_shift_bulk, phase_two_sz_bulk,
+                               phase_two, bterSamples.s2);
 
         delete[] phase_two_shift_fill;
         delete[] phase_two_sz_fill;
