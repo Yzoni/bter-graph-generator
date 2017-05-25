@@ -3,12 +3,17 @@
 #include <python3.4m/Python.h>
 #include <vector>
 
+#include "spdlog/spdlog.h"
 #include "BterPhases.h"
 
+//#define VALUES
+
 using namespace bter;
+namespace spd = spdlog;
 
 void setupLogger() {
-
+    auto console = spd::stdout_color_mt("logger");
+    console->info("Logging started");
 }
 
 void setupEnvironment() {
@@ -17,13 +22,13 @@ void setupEnvironment() {
     const char *path = dir.c_str();
 
     setenv("PYTHONPATH", path, 1);
-    std::cout << "Python path set to: " << std::endl;
-    std::cout << path << std::endl;
+    spd::get("logger")->info("Python path set to {}", path);
 }
 
 // PyObject -> Vector
 std::vector<double> pyListToVector(PyObject *incoming) {
     std::vector<double> data;
+    data.reserve(100000);
     if (PyList_Check(incoming)) {
         for (Py_ssize_t i = 0; i < PyList_Size(incoming); i++) {
             PyObject *value = PyList_GetItem(incoming, i);
@@ -44,8 +49,12 @@ int main() {
     /*
      * Get parameters using python
      */
-    setupEnvironment();
 
+    spd::get("logger")->info("Setting up environment");
+    setupEnvironment();
+    spd::get("logger")->info("Environment setup");
+
+    spd::get("logger")->info("Starting Python");
     Py_Initialize();
 
     PyObject *module = PyImport_ImportModule("parameters.search");
@@ -54,23 +63,28 @@ int main() {
     PyObject *klass = PyObject_GetAttrString(module, "ParameterSearch");
     assert(klass != NULL);
 
-    PyObject *instance = PyObject_CallFunction(klass, "dddffd", 20, 10, 3, 0.95, 0.15, 1);
+    PyObject *instance = PyObject_CallFunction(klass, "dddffd", 100000, 40000, 32, 0.95, 0.15, 1);
     assert(instance != NULL);
 
-    PyObject *result_nd = PyObject_CallMethod(instance, "run_nd", "(iiiffi)", 20, 10, 3, 0.95, 0.15, 1);
+    PyObject *result_nd = PyObject_CallMethod(instance, "run_nd", "(iiiffi)", 100000, 40000, 32, 0.95, 0.15, 1);
     assert(result_nd != NULL);
 
-    PyObject *result_ccd = PyObject_CallMethod(instance, "run_ccd", "(iiiffi)", 20, 10, 3, 0.95, 0.15, 1);
+    PyObject *result_ccd = PyObject_CallMethod(instance, "run_ccd", "(iiiffi)", 100000, 40000, 32, 0.95, 0.15, 1);
     assert(result_ccd != NULL);
 
+    spd::get("logger")->info("Python finished executing, start copying list to vector");
     std::vector<double> nd_vector = pyListToVector(result_nd);
+    spd::get("logger")->info("ND vector copied");
     std::vector<double> ccd_vector = pyListToVector(result_ccd);
+    spd::get("logger")->info("CD vector copied");
 
     Py_Finalize();
 
     // Get pointer to start of vector array
     double *nd = &nd_vector[0];
     double *cd = &ccd_vector[0];
+
+    spd::get("logger")->info("Allocate new arrays");
 
     /*
      * Start C++ library
@@ -88,6 +102,7 @@ int main() {
     double *ng = new double[dmax]{};
     int *ndprime = new int[dmax]{};
 
+    spd::get("logger")->info("Start BTER setup");
     BTERSetupResult bterSetupResult{
             id, ndprime,
             wd, rdfill, ndfill, wg, ig, bg, ng
@@ -95,19 +110,42 @@ int main() {
 
     BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
     bterSetup.run();
+    spd::get("logger")->info("Finished BTER setup");
 
-    // Phases
+    // Setup timer
+    std::chrono::time_point <std::chrono::system_clock> start, end;
+    std::chrono::duration<double> elapsed_seconds;
+
+    // COMPUTE PHASES
+    spd::get("logger")->info("Start computing phases");
+    start = std::chrono::system_clock::now();
     BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
     bterPhases.computeSamples();
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    spd::get("logger")->info("Finished computing phase, took {} seconds", elapsed_seconds.count());
 
+    // PHASE ONE
+    spd::get("logger")->info("Start phase one");
+    start = std::chrono::system_clock::now();
     int *phase_one_i = new int[bterPhases.bterSamples.s1];
     int *phase_one_j = new int[bterPhases.bterSamples.s1];
     bterPhases.phaseOneGpu(phase_one_i, phase_one_j);
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    spd::get("logger")->info("Finished phase one, took {} seconds", elapsed_seconds.count());
 
+    // PHASE TWO
+    spd::get("logger")->info("Start phase two");
+    start = std::chrono::system_clock::now();
     int *phase_two_i = new int[bterPhases.bterSamples.s2];
     int *phase_two_j = new int[bterPhases.bterSamples.s2];
     bterPhases.phaseTwoGpu(phase_two_i, phase_two_j);
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    spd::get("logger")->info("Finished phase two, took {} seconds", elapsed_seconds.count());
 
+#ifdef VALUES
     std::cout << "\nPHASE ONE: \n";
     for (int i = 0; i < bterPhases.bterSamples.s1; ++i)
         std::cout << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
@@ -117,7 +155,9 @@ int main() {
     std::cout << "\nPHASE TWO: \n";
     for (int i = 0; i < bterPhases.bterSamples.s2; ++i)
         std::cout << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
+#endif
 
+    spd::get("logger")->info("Freeing memory");
     delete[] id;
     delete[] wd;
     delete[] rdfill;
@@ -134,16 +174,6 @@ int main() {
     delete[] phase_two_i;
     delete[] phase_two_j;
 
-//    std::chrono::time_point<std::chrono::system_clock> start, end;
-//    start = std::chrono::system_clock::now();
-//    std::cout << "f(42) = " << fibonacci(42) << '\n';
-//    end = std::chrono::system_clock::now();
-//
-//    std::chrono::duration<double> elapsed_seconds = end-start;
-//    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-//
-//    std::cout << "finished computation at " << std::ctime(&end_time)
-//              << "elapsed time: " << elapsed_seconds. << "s\n";
     return 0;
 }
 
