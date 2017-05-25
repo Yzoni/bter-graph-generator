@@ -3,8 +3,11 @@
 #include <cmath>
 #include <random>
 #include <iostream>
-#include "BterPhases.h"
 
+#include "BterPhases.h"
+#include "../spdlog/spdlog.h"
+
+namespace spd = spdlog;
 
 namespace bter {
 
@@ -54,25 +57,78 @@ namespace bter {
         }
     }
 
-    void BterPhases::computeSamples() {
+    void BterPhases::computeSamplesGpu() {
         double wg_sum = std::accumulate(bterSetupResult->wg, &bterSetupResult->wg[dmax], 0.0, std::plus<double>());
         double wd_sum = std::accumulate(bterSetupResult->wd, &bterSetupResult->wd[dmax], 0.0, std::plus<double>());
         double w = wg_sum + wd_sum;
 
         int nsmp = (int) std::round(w);
 
+        // Setup timer
+        std::chrono::time_point <std::chrono::system_clock> start, end;
+        std::chrono::duration<double> elapsed_seconds;
+
+        spd::get("logger")->info("Start computeSamples() generate random");
+        start = std::chrono::system_clock::now();
         double *r = new double[nsmp];
-        for (int i = 0; i < nsmp; ++i) {
-            r[i] = randomUnified(0, 1);
-        }
+        cuda_wrapper_rand_array(nsmp, r);
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished computeSamples() generate random, took {} seconds", elapsed_seconds.count());
+
 
         double t = (wg_sum / w);
 
+        spd::get("logger")->info("Start computeSamples() samples s1");
+        start = std::chrono::system_clock::now();
         for (int i = 0; i < nsmp; ++i) {
             if (r[i] < t) {
                 ++bterSamples.s1;
             }
         }
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished computeSamples() samples s1, took {} seconds", elapsed_seconds.count());
+
+        bterSamples.s2 = nsmp - bterSamples.s1;
+
+        delete[] r;
+    }
+
+    void BterPhases::computeSamplesSeq() {
+        double wg_sum = std::accumulate(bterSetupResult->wg, &bterSetupResult->wg[dmax], 0.0, std::plus<double>());
+        double wd_sum = std::accumulate(bterSetupResult->wd, &bterSetupResult->wd[dmax], 0.0, std::plus<double>());
+        double w = wg_sum + wd_sum;
+
+        int nsmp = (int) std::round(w);
+
+        // Setup timer
+        std::chrono::time_point <std::chrono::system_clock> start, end;
+        std::chrono::duration<double> elapsed_seconds;
+
+        spd::get("logger")->info("Start computeSamples() generate random");
+        start = std::chrono::system_clock::now();
+        double *r = new double[nsmp];
+        for (int i = 0; i < nsmp; ++i) {
+            r[i] = randomUnified(0, 1);
+        }
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished computeSamples() generate random, took {} seconds", elapsed_seconds.count());
+
+        double t = (wg_sum / w);
+
+        spd::get("logger")->info("Start computeSamples() samples s1");
+        start = std::chrono::system_clock::now();
+        for (int i = 0; i < nsmp; ++i) {
+            if (r[i] < t) {
+                ++bterSamples.s1;
+            }
+        }
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished computeSamples() samples s1, took {} seconds", elapsed_seconds.count());
+
         bterSamples.s2 = nsmp - bterSamples.s1;
 
         delete[] r;

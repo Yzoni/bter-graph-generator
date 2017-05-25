@@ -120,7 +120,7 @@ int main() {
     spd::get("logger")->info("Start computing phases");
     start = std::chrono::system_clock::now();
     BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
-    bterPhases.computeSamples();
+    bterPhases.computeSamplesGpu();
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
     spd::get("logger")->info("Finished computing phase, took {} seconds", elapsed_seconds.count());

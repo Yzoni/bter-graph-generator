@@ -38,7 +38,9 @@ namespace bter {
         // Phases
         BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
 
-        bterPhases.computeSamples();
+    bterPhases.
+
+    computeSamplesSeq();
 
         std::cerr << "\ncompute samples: \n";
         std::cerr << "s1 Value: " << bterPhases.bterSamples.s1 << std::endl;
@@ -78,7 +80,9 @@ namespace bter {
         // Phases
         BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
 
-        bterPhases.computeSamples();
+bterPhases.
+
+computeSamplesSeq();
 
         int *phase_one_i = new int[bterPhases.bterSamples.s1];
         int *phase_one_j = new int[bterPhases.bterSamples.s1];
@@ -126,7 +130,9 @@ phaseOneSeq(phase_one_i, phase_one_j
         // Phases
         BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
 
-        bterPhases.computeSamples();
+bterPhases.
+
+computeSamplesSeq();
 
         int *phase_two_i = new int[bterPhases.bterSamples.s2];
         int *phase_two_j = new int[bterPhases.bterSamples.s2];

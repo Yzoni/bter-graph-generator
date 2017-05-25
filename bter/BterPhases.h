@@ -3,6 +3,8 @@
 
 #include "BterSetup.h"
 
+void cuda_wrapper_rand_array(int length, double *out_array);
+
 void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
                             double *block_b, double *block_i, double *block_n,
                             int length);
@@ -34,7 +36,9 @@ namespace bter {
     public:
         BterPhases(BTERSetupResult *bterSetupResult, int dmax, double *nd, double *cd);
 
-        void computeSamples();
+        void computeSamplesSeq();
+
+        void computeSamplesGpu();
 
         void phaseOnePrepare(int *group_sample, double *block_b, double *block_i, double *block_n);
 
