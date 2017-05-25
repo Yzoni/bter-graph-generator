@@ -86,9 +86,9 @@ void cuda_wrapper_phase_one(int *i, int *j,
     cudaFree(cuda_block_n);
 }
 
-void cuda_wrapper_phase_two(double *phase_two_shift_fill, double *phase_two_sz_fill,
+void cuda_wrapper_phase_two(int *phase_two,
+                            double *phase_two_shift_fill, double *phase_two_sz_fill,
                             double *phase_two_shift_bulk, double *phase_two_sz_bulk,
-                            int *phase_two,
                             int length) {
 
     curandState *devStates;
