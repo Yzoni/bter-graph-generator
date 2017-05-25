@@ -75,8 +75,8 @@ phase_two_bulk(double *phase_two_shift_bulk, double *phase_two_sz_bulk, double *
 }
 
 __global__ void
-phase_two_d(double *phase_two_fill, double *phase_two_bulk, curandState *state,
-            int *phase_two, int length) {
+phase_two_d(double *phase_two_fill, double *phase_two_bulk, int *phase_two,
+            curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
         if (curand_uniform(&state[idx]) < phase_two_fill[idx]) {
