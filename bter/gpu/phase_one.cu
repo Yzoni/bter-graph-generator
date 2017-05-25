@@ -12,37 +12,44 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
     }
 }
 
-__global__ void setup_random_kernel(curandState *state, unsigned long seed) {
-    int idx = blockIdx.x * threadIdx.x * blockDim.x;
-    curand_init(seed, idx, 0, &state[idx]);
+__global__ void setup_random_kernel(curandState *state, unsigned long seed, int length) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < length) {
+        curand_init(seed, idx, 0, &state[idx]);
+    }
 }
 
-__global__ void phase_one_shift(double *block_b, double *block_i, double *block_n, int *shift, curandState *state) {
+__global__ void
+phase_one_shift(double *block_b, double *block_i, double *block_n, int *shift, curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     // Compute block and compute its offset
-    shift[idx] = (int) __double2int_rn(
-            block_i[idx] + __double2int_rd(curand_uniform(&state[idx]) * block_b[idx]) * block_n[idx]);
-
+    if (idx < length) {
+        shift[idx] = (int) __double2int_rn(
+                block_i[idx] + __double2int_rd(curand_uniform(&state[idx]) * block_b[idx]) * block_n[idx]);
+    }
 }
 
-__global__ void phase_one_i(int *i, double *block_b, double *block_i, double *block_n, int *shift, curandState *state) {
+__global__ void
+phase_one_i(int *i, double *block_b, double *block_i, double *block_n, int *shift, curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     // Choose first node
-    i[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * block_n[idx]) + shift[idx]);
-
+    if (idx < length) {
+        i[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * block_n[idx]) + shift[idx]);
+    }
 }
 
 __global__ void phase_one_j(int *i, int *j, double *block_b, double *block_i, double *block_n, int *shift,
-                            curandState *state) {
+                            curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < length) {
+        // Choose second node
+        // "Without replacement"
+        j[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * (block_n[idx] - 1)) + shift[idx]);
 
-    // Choose second node
-    // "Without replacement"
-    j[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * (block_n[idx] - 1)) + shift[idx]);
-
-    // Remove loops
-    if (j[idx] >= i[idx]) {
-        ++j[idx];
+        // Remove loops
+        if (j[idx] >= i[idx]) {
+            ++j[idx];
+        }
     }
 }
 
@@ -64,7 +71,7 @@ void cuda_wrapper_phase_one(int *i, int *j,
 
     gpuErrchk(cudaMalloc((void **) &cuda_block_b, size_input));
     gpuErrchk(cudaMalloc((void **) &cuda_block_i, size_input));
-    gpuErrchk(cudaMalloc((void **) &cuda_j, size_input));
+    gpuErrchk(cudaMalloc((void **) &cuda_block_n, size_input));
 
     gpuErrchk(cudaMemcpy(cuda_block_b, block_b, size_input, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(cuda_block_i, block_i, size_input, cudaMemcpyHostToDevice));
@@ -76,18 +83,31 @@ void cuda_wrapper_phase_one(int *i, int *j,
 
     int blocksize = 256;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
-    setup_random_kernel <<< nblock, blocksize >>> (devStates, time(NULL));
+
+    // Shift
+    setup_random_kernel << < nblock, blocksize >> > (devStates, time(NULL), length);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
+    phase_one_shift << < nblock, blocksize >> >
+                                 (cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    phase_one_shift << < nblock, blocksize >> > (cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates);
-
-    phase_one_i << < nblock, blocksize >> > (cuda_i, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates);
+    // i
+    setup_random_kernel << < nblock, blocksize >> > (devStates, time(NULL), length);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
+    phase_one_i << < nblock, blocksize >> >
+                             (cuda_i, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
+    // j
+    setup_random_kernel << < nblock, blocksize >> > (devStates, time(NULL), length);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
     phase_one_j << < nblock, blocksize >> >
-                             (cuda_i, cuda_j, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates);
+                             (cuda_i, cuda_j, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
@@ -103,8 +123,4 @@ void cuda_wrapper_phase_one(int *i, int *j,
     cudaFree(cuda_block_b);
     cudaFree(cuda_block_i);
     cudaFree(cuda_block_n);
-}
-
-void cuda_wrapper_phase_two() {
-
 }
