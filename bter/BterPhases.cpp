@@ -76,7 +76,6 @@ namespace bter {
         elapsed_seconds = end - start;
         spd::get("logger")->info("Finished computeSamples() generate random, took {} seconds", elapsed_seconds.count());
 
-
         double t = (wg_sum / w);
 
         spd::get("logger")->info("Start computeSamples() samples s1");
@@ -135,9 +134,21 @@ namespace bter {
     }
 
     void BterPhases::phaseOnePrepare(int *group_sample, double *block_b, double *block_i, double *block_n) {
-        // Get group samples
-        randomSample(bterSetupResult->wg, bterSamples.s1, group_sample);
 
+        // Setup timer
+        std::chrono::time_point <std::chrono::system_clock> start, end;
+        std::chrono::duration<double> elapsed_seconds;
+
+        // Get group samples
+        spd::get("logger")->info("Start phaseOnePrepare() randomSample");
+        start = std::chrono::system_clock::now();
+        randomSample(bterSetupResult->wg, bterSamples.s1, group_sample);
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished phaseOnePrepare() random sample, took {} seconds", elapsed_seconds.count());
+
+        spd::get("logger")->info("Start phaseOnePrepare() loop");
+        start = std::chrono::system_clock::now();
         int k, sample;
         for (k = 0; k < bterSamples.s1; ++k) {
             sample = group_sample[k] - 1;
@@ -145,6 +156,10 @@ namespace bter {
             block_i[k] = bterSetupResult->ig[sample]; // Number of affinity block in group g
             block_n[k] = bterSetupResult->ng[sample]; // Number of of nodes in group g
         }
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished phaseOnePrepare() loop, took {} seconds", elapsed_seconds.count());
+
     }
 
     void BterPhases::phaseOneSeq(int *phase_one_i, int *phase_one_j) {
@@ -291,9 +306,20 @@ namespace bter {
         double *phase_two_shift_bulk = new double[bterSamples.s2];
         double *phase_two_sz_bulk = new double[bterSamples.s2];
 
+        // Setup timer
+        std::chrono::time_point <std::chrono::system_clock> start, end;
+        std::chrono::duration<double> elapsed_seconds;
+
+        // Get group samples
+        spd::get("logger")->info("Start phaseTwoNodeGpu() prepare");
+        start = std::chrono::system_clock::now();
         phaseTwoNodePrepare(id_bulk, nd_bulk,
                             phase_two_shift_fill, phase_two_sz_fill,
                             phase_two_shift_bulk, phase_two_sz_bulk);
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished phaseTwoNodeGpu() prepare, took {} seconds", elapsed_seconds.count());
+
 
         cuda_wrapper_phase_two(phase_two,
                                phase_two_shift_fill, phase_two_sz_fill,
