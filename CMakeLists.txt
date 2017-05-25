@@ -4,7 +4,7 @@ set(CMAKE_CXX_COMPILER "g++")
 add_definitions(-std=c++0x)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++0x")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -arch=sm_61")
 
 project(bter_project)
 
@@ -21,7 +21,8 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 set(SOURCE_FILES main.cpp)
 add_executable(bter_run ${SOURCE_FILES})
 
-include_directories(bter bter/gpu)
+include_directories(bter bter/gpu spdlog)
+link_directories(spdlog)
 
 add_subdirectory(bter/gpu)
 add_subdirectory(bter)
