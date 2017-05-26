@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "spdlog/spdlog.h"
-#include "BterPhases.h"
+#include "BterPhasesGpu.h"
 
 //#define VALUES
 
@@ -119,8 +119,8 @@ int main() {
     // COMPUTE PHASES
     spd::get("logger")->info("Start computing phases");
     start = std::chrono::system_clock::now();
-    BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
-    bterPhases.computeSamplesGpu();
+    BterPhasesGpu bterPhasesGpu(&bterSetupResult, dmax, nd, cd);
+    bterPhasesGpu.computeSamples();
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
     spd::get("logger")->info("Finished computing phase, took {} seconds", elapsed_seconds.count());
@@ -128,9 +128,9 @@ int main() {
     // PHASE ONE
     spd::get("logger")->info("Start phase one");
     start = std::chrono::system_clock::now();
-    int *phase_one_i = new int[bterPhases.bterSamples.s1];
-    int *phase_one_j = new int[bterPhases.bterSamples.s1];
-    bterPhases.phaseOneGpu(phase_one_i, phase_one_j);
+    int *phase_one_i = new int[bterPhasesGpu.bterSamples.s1];
+    int *phase_one_j = new int[bterPhasesGpu.bterSamples.s1];
+    bterPhasesGpu.phaseOne(phase_one_i, phase_one_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
     spd::get("logger")->info("Finished phase one, took {} seconds", elapsed_seconds.count());
@@ -138,22 +138,22 @@ int main() {
     // PHASE TWO
     spd::get("logger")->info("Start phase two");
     start = std::chrono::system_clock::now();
-    int *phase_two_i = new int[bterPhases.bterSamples.s2];
-    int *phase_two_j = new int[bterPhases.bterSamples.s2];
-    bterPhases.phaseTwoGpu(phase_two_i, phase_two_j);
+    int *phase_two_i = new int[bterPhasesGpu.bterSamples.s2];
+    int *phase_two_j = new int[bterPhasesGpu.bterSamples.s2];
+    bterPhasesGpu.phaseTwo(phase_two_i, phase_two_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
     spd::get("logger")->info("Finished phase two, took {} seconds", elapsed_seconds.count());
 
 #ifdef VALUES
     std::cout << "\nPHASE ONE: \n";
-    for (int i = 0; i < bterPhases.bterSamples.s1; ++i)
+    for (int i = 0; i < bterPhasesGpu.bterSamples.s1; ++i)
         std::cout << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
 
     std::cout << std::endl;
 
     std::cout << "\nPHASE TWO: \n";
-    for (int i = 0; i < bterPhases.bterSamples.s2; ++i)
+    for (int i = 0; i < bterPhasesGpu.bterSamples.s2; ++i)
         std::cout << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
 #endif
 

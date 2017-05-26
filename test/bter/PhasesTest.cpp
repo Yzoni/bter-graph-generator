@@ -1,7 +1,7 @@
 
 
 #include <gtest/gtest.h>
-#include <BterPhases.h>
+#include <BterPhasesSeq.h>
 
 #define DMAX 7
 
@@ -36,15 +36,17 @@ namespace bter {
         bterSetup.run();
 
         // Phases
-        BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
+        BterPhasesSeq bterPhasesSeq(&bterSetupResult, dmax, nd, cd);
 
-    bterPhases.
+    bterPhasesSeq.
 
-    computeSamplesSeq();
+    computeSamples();
 
         std::cerr << "\ncompute samples: \n";
-        std::cerr << "s1 Value: " << bterPhases.bterSamples.s1 << std::endl;
-        std::cerr << "s2 Value: " << bterPhases.bterSamples.s2 << std::endl;
+    std::cerr << "s1 Value: " << bterPhasesSeq.bterSamples.s1 <<
+    std::endl;
+    std::cerr << "s2 Value: " << bterPhasesSeq.bterSamples.s2 <<
+    std::endl;
     }
 
 
@@ -78,20 +80,24 @@ namespace bter {
         bterSetup.run();
 
         // Phases
-        BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
+        BterPhasesSeq bterPhasesSeq(&bterSetupResult, dmax, nd, cd);
 
-bterPhases.
+bterPhasesSeq.
 
-computeSamplesSeq();
+computeSamples();
 
-        int *phase_one_i = new int[bterPhases.bterSamples.s1];
-        int *phase_one_j = new int[bterPhases.bterSamples.s1];
-bterPhases.
-phaseOneSeq(phase_one_i, phase_one_j
+int *phase_one_i = new int[bterPhasesSeq.bterSamples.s1];
+int *phase_one_j = new int[bterPhasesSeq.bterSamples.s1];
+bterPhasesSeq.
+phaseOne(phase_one_i, phase_one_j
 );
 
         std::cerr << "\n BterPhases 1" << std::endl;
-        for (int i = 0; i < bterPhases.bterSamples.s1; ++i)
+for (
+int i = 0;
+i<bterPhasesSeq.bterSamples.
+s1;
+++i)
             std::cerr << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
 
         delete[] phase_one_i;
@@ -128,20 +134,24 @@ phaseOneSeq(phase_one_i, phase_one_j
         bterSetup.run();
 
         // Phases
-        BterPhases bterPhases(&bterSetupResult, dmax, nd, cd);
+        BterPhasesSeq bterPhasesSeq(&bterSetupResult, dmax, nd, cd);
 
-bterPhases.
+bterPhasesSeq.
 
-computeSamplesSeq();
+computeSamples();
 
-        int *phase_two_i = new int[bterPhases.bterSamples.s2];
-        int *phase_two_j = new int[bterPhases.bterSamples.s2];
-bterPhases.
-phaseTwoSeq(phase_two_i, phase_two_j
+int *phase_two_i = new int[bterPhasesSeq.bterSamples.s2];
+int *phase_two_j = new int[bterPhasesSeq.bterSamples.s2];
+bterPhasesSeq.
+phaseTwo(phase_two_i, phase_two_j
 );
 
         std::cerr << "\n BterPhases 2" << std::endl;
-        for (int i = 0; i < bterPhases.bterSamples.s2; ++i)
+for (
+int i = 0;
+i<bterPhasesSeq.bterSamples.
+s2;
+++i)
             std::cerr << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
 
         delete[] phase_two_i;

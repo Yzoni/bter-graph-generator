@@ -2,12 +2,14 @@ project(bter_lib)
 
 set(HEADER_FILES
         BterSetup.h
-        BterPhases.h
+        BterPhasesSeq.h
+        BterPhasesGpu.h
         )
 
 set(SOURCE_FILES
         BterSetup.cpp
-        BterPhases.cpp
+        BterPhasesSeq.cpp
+        BterPhasesGpu.cpp
         )
 
 add_library(bter STATIC ${SOURCE_FILES} ${HEADER_FILES})

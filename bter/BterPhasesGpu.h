@@ -1,5 +1,5 @@
-#ifndef BTER_SEQUENTIAL_BTERPHASES_H
-#define BTER_SEQUENTIAL_BTERPHASES_H
+#ifndef BTER_BTERPHASESGPU_H
+#define BTER_BTERPHASESGPU_H
 
 #include "BterSetup.h"
 
@@ -32,31 +32,21 @@ namespace bter {
         int bter_phase_two_size;
     };
 
-    class BterPhases {
+    class BterPhasesGpu {
     public:
-        BterPhases(BTERSetupResult *bterSetupResult, int dmax, double *nd, double *cd);
+        BterPhasesGpu(BTERSetupResult *bterSetupResult, int dmax, double *nd, double *cd);
 
-        void computeSamplesSeq();
-
-        void computeSamplesGpu();
+        void computeSamples();
 
         void phaseOnePrepare(int *group_sample, double *block_b, double *block_i, double *block_n);
 
-        void phaseOneSeq(int *phase_one_i, int *phase_one_j);
-
-        void phaseOneGpu(int *phase_one_i, int *phase_one_j);
+        void phaseOne(int *phase_one_i, int *phase_one_j);
 
         void phaseTwoNodePrepare(double *id_bulk, double *nd_bulk,
                                  double *phase_two_shift_fill, double *phase_two_sz_fill,
                                  double *phase_two_shift_bulk, double *phase_two_sz_bulk);
 
-        void phaseTwoSeq(int *phase_two_i, int *phase_two_j);
-
-        void phaseTwoGpu(int *phase_two_i, int *phase_one_j);
-
-        void phaseTwoNodeSeq(double *id_bulk, double *nd_bulk, int *phase_two);
-
-        void phaseTwoNodeGpu(double *id_bulk, double *nd_bulk, int *phase_two);
+        void phaseTwo(int *phase_two_i, int *phase_one_j);
 
 //        void removeLoopsPhaseTwo(int *i, int *j, int length, std::vector<int, std::allocator<int>> *new_i,
 //                                 vector<int, std::allocator<int>> *new_j);
@@ -70,12 +60,10 @@ namespace bter {
 
         double *nd, *cd;
 
-        double randomUnified(int from, int to);
-
         void randomSample(double *wg, int nsamples, int *binindices);
 
         void phaseTwoNode(double *id_bulk, double *nd_bulk, int *phase_two);
     };
 }
 
-#endif //BTER_SEQUENTIAL_BTERPHASES_H
+#endif //BTER_BTERPHASESGPU_H
