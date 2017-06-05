@@ -39,6 +39,7 @@ namespace bter {
         }
 
         double *r = new double[nsamples];
+        spd::get("logger")->info("Start randomSample() nsamples: {}", nsamples);
         cuda_wrapper_rand_array(nsamples, r);
 
         // Assign uniform random values to bins
@@ -85,9 +86,11 @@ namespace bter {
         }
         end = std::chrono::system_clock::now();
         elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished computeSamples() samples s1, took {} seconds", elapsed_seconds.count());
+        spd::get("logger")->info("computeSamples() samples s1, took {} seconds", elapsed_seconds.count());
 
         bterSamples.s2 = nsmp - bterSamples.s1;
+        spd::get("logger")->info("computeSamples() samples nsmp: {}, s1: {}, s2: {}", nsmp, bterSamples.s1,
+                                 bterSamples.s2);
 
         delete[] r;
     }

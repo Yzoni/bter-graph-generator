@@ -16,13 +16,18 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 
 void cuda_wrapper_rand_array(int length, double *out_array) {
     curandState *devStates;
-    cudaMalloc(&devStates, length * sizeof(curandState));
+    gpuErrchk(cudaMalloc(&devStates, length * sizeof(curandState)));
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
 
     double *cuda_rand_array;
     gpuErrchk(cudaMalloc((void **) &cuda_rand_array, length * sizeof(double)));
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
 
     int blocksize = 256;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
+    fprintf(stdout, "Number of blocks: %d\n", nblock);
     setup_random_kernel << < nblock, blocksize >> > (devStates, time(NULL), length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
@@ -32,6 +37,8 @@ void cuda_wrapper_rand_array(int length, double *out_array) {
     gpuErrchk(cudaDeviceSynchronize());
 
     cudaMemcpy(out_array, cuda_rand_array, length * sizeof(double), cudaMemcpyDeviceToHost);
+
+    cudaFree(devStates);
 }
 
 void cuda_wrapper_phase_one(int *i, int *j,

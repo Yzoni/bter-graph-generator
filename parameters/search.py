@@ -72,7 +72,7 @@ class ParameterSearch:
 
     def degree_distribution_parameter_search(self):
         handle = lambda x: self.evaluate_degree_distribution(x[0], x[1])
-        xopt = scipy.optimize.fmin(func=handle, x0=[2, 2])
+        xopt = scipy.optimize.fmin(func=handle, x0=[2, 2], xtol=1e-4, ftol=1e-4)
         return xopt
 
     def generate_degree_distribution(self, pdf, cutoff=0):
@@ -106,7 +106,7 @@ class ParameterSearch:
         self.evaluate_degree_distribution(self.n, pdf)
 
         handle = lambda x: self._compute_objective(nd, x)
-        xopt = scipy.optimize.fmin(func=handle, x0=[0.5])
+        xopt = scipy.optimize.fmin(func=handle, x0=[0.5], xtol=1e-4, ftol=1e-4)
 
         return xopt[0], np.where(nd > 0)[0][-1]
 

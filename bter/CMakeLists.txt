@@ -4,6 +4,7 @@ set(HEADER_FILES
         BterSetup.h
         BterPhasesSeq.h
         BterPhasesGpu.h
+        BterSamples.h
         )
 
 set(SOURCE_FILES

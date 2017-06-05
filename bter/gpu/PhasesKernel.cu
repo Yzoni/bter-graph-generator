@@ -15,7 +15,7 @@ __global__ void
 get_random_array(curandState *state, unsigned long seed, int length, double *out_array) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
-        curand_uniform(&state[idx]);
+        out_array[idx] = curand_uniform(&state[idx]);
     }
 }
 

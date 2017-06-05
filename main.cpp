@@ -2,9 +2,12 @@
 #include <assert.h>
 #include <python3.4m/Python.h>
 #include <vector>
+#include <fstream>
 
 #include "spdlog/spdlog.h"
 #include "BterPhasesGpu.h"
+#include "BterPhasesSeq.h"
+#include "BterSamples.h"
 
 //#define VALUES
 
@@ -41,21 +44,7 @@ std::vector<double> pyListToVector(PyObject *incoming) {
     return data;
 }
 
-
-int main() {
-
-    setupLogger();
-
-    /*
-     * Get parameters using python
-     */
-
-    spd::get("logger")->info("Setting up environment");
-    setupEnvironment();
-    spd::get("logger")->info("Environment setup");
-
-    spd::get("logger")->info("Starting Python");
-    Py_Initialize();
+void parameterInitialize(int batch_size, std::vector<double> *nd_vector, std::vector<double> *ccd_vector) {
 
     PyObject *module = PyImport_ImportModule("parameters.search");
     assert(module != NULL);
@@ -63,22 +52,28 @@ int main() {
     PyObject *klass = PyObject_GetAttrString(module, "ParameterSearch");
     assert(klass != NULL);
 
-    PyObject *instance = PyObject_CallFunction(klass, "dddffd", 100000, 40000, 32, 0.95, 0.15, 1);
+    PyObject *instance = PyObject_CallFunction(klass, "dddffd", batch_size, 10000, 72, 0.90, 0.15, 1);
     assert(instance != NULL);
 
-    PyObject *result_nd = PyObject_CallMethod(instance, "run_nd", "(iiiffi)", 100000, 40000, 32, 0.95, 0.15, 1);
+    PyObject *result_nd = PyObject_CallMethod(instance, "run_nd", "(iiiffi)", batch_size, 10000, 72, 0.90, 0.15, 1);
     assert(result_nd != NULL);
 
-    PyObject *result_ccd = PyObject_CallMethod(instance, "run_ccd", "(iiiffi)", 100000, 40000, 32, 0.95, 0.15, 1);
+    PyObject *result_ccd = PyObject_CallMethod(instance, "run_ccd", "(iiiffi)", batch_size, 10000, 72, 0.90, 0.15, 1);
     assert(result_ccd != NULL);
 
     spd::get("logger")->info("Python finished executing, start copying list to vector");
-    std::vector<double> nd_vector = pyListToVector(result_nd);
+    *nd_vector = pyListToVector(result_nd);
     spd::get("logger")->info("ND vector copied");
-    std::vector<double> ccd_vector = pyListToVector(result_ccd);
+    *ccd_vector = pyListToVector(result_ccd);
     spd::get("logger")->info("CD vector copied");
+}
 
-    Py_Finalize();
+void singleBenchmarkGpu(std::ofstream &outfile, int batch_size) {
+
+    std::vector<double> nd_vector;
+    std::vector<double> ccd_vector;
+
+    parameterInitialize(batch_size, &nd_vector, &ccd_vector);
 
     // Get pointer to start of vector array
     double *nd = &nd_vector[0];
@@ -133,6 +128,7 @@ int main() {
     bterPhasesGpu.phaseOne(phase_one_i, phase_one_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
+    outfile << batch_size << "," << elapsed_seconds.count() << ",";
     spd::get("logger")->info("Finished phase one, took {} seconds", elapsed_seconds.count());
 
     // PHASE TWO
@@ -143,19 +139,8 @@ int main() {
     bterPhasesGpu.phaseTwo(phase_two_i, phase_two_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
+    outfile << elapsed_seconds.count() << std::endl;
     spd::get("logger")->info("Finished phase two, took {} seconds", elapsed_seconds.count());
-
-#ifdef VALUES
-    std::cout << "\nPHASE ONE: \n";
-    for (int i = 0; i < bterPhasesGpu.bterSamples.s1; ++i)
-        std::cout << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
-
-    std::cout << std::endl;
-
-    std::cout << "\nPHASE TWO: \n";
-    for (int i = 0; i < bterPhasesGpu.bterSamples.s2; ++i)
-        std::cout << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
-#endif
 
     spd::get("logger")->info("Freeing memory");
     delete[] id;
@@ -173,6 +158,270 @@ int main() {
 
     delete[] phase_two_i;
     delete[] phase_two_j;
+}
+
+void singleBenchmarkSeq(std::ofstream &outfile, int batch_size) {
+
+    std::vector<double> nd_vector;
+    std::vector<double> ccd_vector;
+
+    parameterInitialize(batch_size, &nd_vector, &ccd_vector);
+
+    // Get pointer to start of vector array
+    double *nd = &nd_vector[0];
+    double *cd = &ccd_vector[0];
+
+    spd::get("logger")->info("Allocate new arrays");
+
+    /*
+     * Start C++ library
+     */
+    double beta = 1;
+    int dmax = nd_vector.size();
+
+    int *id = new int[dmax]{};
+    double *wd = new double[dmax]{};
+    double *rdfill = new double[dmax]{};
+    double *ndfill = new double[dmax]{};
+    double *wg = new double[dmax]{};
+    double *ig = new double[dmax]{};
+    double *bg = new double[dmax]{};
+    double *ng = new double[dmax]{};
+    int *ndprime = new int[dmax]{};
+
+    spd::get("logger")->info("Start BTER setup");
+    BTERSetupResult bterSetupResult{
+            id, ndprime,
+            wd, rdfill, ndfill, wg, ig, bg, ng
+    };
+
+    BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
+    bterSetup.run();
+    spd::get("logger")->info("Finished BTER setup");
+
+    // Setup timer
+    std::chrono::time_point <std::chrono::system_clock> start, end;
+    std::chrono::duration<double> elapsed_seconds;
+
+    // COMPUTE PHASES
+    spd::get("logger")->info("Start computing phases");
+    start = std::chrono::system_clock::now();
+    BterPhasesSeq bterPhasesSeq(&bterSetupResult, dmax, nd, cd);
+    bterPhasesSeq.computeSamples();
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    spd::get("logger")->info("Finished computing phase, took {} seconds", elapsed_seconds.count());
+
+    // PHASE ONE
+    spd::get("logger")->info("Start phase one");
+    start = std::chrono::system_clock::now();
+    int *phase_one_i = new int[bterPhasesSeq.bterSamples.s1];
+    int *phase_one_j = new int[bterPhasesSeq.bterSamples.s1];
+    bterPhasesSeq.phaseOne(phase_one_i, phase_one_j);
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    outfile << batch_size << "," << elapsed_seconds.count() << ",";
+    spd::get("logger")->info("Finished phase one, took {} seconds", elapsed_seconds.count());
+
+    // PHASE TWO
+    spd::get("logger")->info("Start phase two");
+    start = std::chrono::system_clock::now();
+    int *phase_two_i = new int[bterPhasesSeq.bterSamples.s2];
+    int *phase_two_j = new int[bterPhasesSeq.bterSamples.s2];
+    bterPhasesSeq.phaseTwo(phase_two_i, phase_two_j);
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    outfile << elapsed_seconds.count() << std::endl;
+    spd::get("logger")->info("Finished phase two, took {} seconds", elapsed_seconds.count());
+
+    spd::get("logger")->info("Freeing memory");
+    delete[] id;
+    delete[] wd;
+    delete[] rdfill;
+    delete[] ndfill;
+    delete[] wg;
+    delete[] ig;
+    delete[] bg;
+    delete[] ng;
+    delete[] ndprime;
+
+    delete[] phase_one_i;
+    delete[] phase_one_j;
+
+    delete[] phase_two_i;
+    delete[] phase_two_j;
+}
+
+void benchmarkSeq(int max_nnodes, int run_count) {
+
+    std::ofstream outfile;
+    outfile.open("cpu_bench.csv");
+    outfile << "nnodes,phase_one_seconds,phase_two_seconds" << std::endl;
+
+    int batch_size;
+    for (int i = 1; i < run_count; ++i) {
+        batch_size = (max_nnodes / run_count) * i;
+        singleBenchmarkSeq(outfile, batch_size);
+    }
+
+    outfile.close();
+}
+
+void benchmarkGpu(int max_nnodes, int run_count) {
+
+    std::ofstream outfile;
+    outfile.open("gpu_bench.csv");
+    outfile << "nnodes,phase_one_seconds,phase_two_seconds" << std::endl;
+
+    int batch_size;
+    for (int i = 1; i < run_count; ++i) {
+        batch_size = (max_nnodes / run_count) * i;
+        singleBenchmarkGpu(outfile, batch_size);
+    }
+
+    outfile.close();
+}
+
+int main() {
+
+    setupLogger();
+
+    setupEnvironment();
+    spd::get("logger")->info("Environment setup");
+    spd::get("logger")->info("Starting Python");
+    Py_Initialize();
+
+    benchmarkSeq(120000, 5);
+
+    Py_Finalize();
+
+//    /*
+//     * Get parameters using python
+//     */
+//
+//    spd::get("logger")->info("Setting up environment");
+//    setupEnvironment();
+//    spd::get("logger")->info("Environment setup");
+//
+//    spd::get("logger")->info("Starting Python");
+//    Py_Initialize();
+//
+//    PyObject *module = PyImport_ImportModule("parameters.search");
+//    assert(module != NULL);
+//
+//    PyObject *klass = PyObject_GetAttrString(module, "ParameterSearch");
+//    assert(klass != NULL);
+//
+//    PyObject *instance = PyObject_CallFunction(klass, "dddffd", 100000, 40000, 32, 0.95, 0.15, 1);
+//    assert(instance != NULL);
+//
+//    PyObject *result_nd = PyObject_CallMethod(instance, "run_nd", "(iiiffi)", 100000, 40000, 32, 0.95, 0.15, 1);
+//    assert(result_nd != NULL);
+//
+//    PyObject *result_ccd = PyObject_CallMethod(instance, "run_ccd", "(iiiffi)", 100000, 40000, 32, 0.95, 0.15, 1);
+//    assert(result_ccd != NULL);
+//
+//    spd::get("logger")->info("Python finished executing, start copying list to vector");
+//    std::vector<double> nd_vector = pyListToVector(result_nd);
+//    spd::get("logger")->info("ND vector copied");
+//    std::vector<double> ccd_vector = pyListToVector(result_ccd);
+//    spd::get("logger")->info("CD vector copied");
+//
+//    Py_Finalize();
+//
+//    // Get pointer to start of vector array
+//    double *nd = &nd_vector[0];
+//    double *cd = &ccd_vector[0];
+//
+//    spd::get("logger")->info("Allocate new arrays");
+//
+//    /*
+//     * Start C++ library
+//     */
+//    double beta = 1;
+//    int dmax = nd_vector.size();
+//
+//    int *id = new int[dmax]{};
+//    double *wd = new double[dmax]{};
+//    double *rdfill = new double[dmax]{};
+//    double *ndfill = new double[dmax]{};
+//    double *wg = new double[dmax]{};
+//    double *ig = new double[dmax]{};
+//    double *bg = new double[dmax]{};
+//    double *ng = new double[dmax]{};
+//    int *ndprime = new int[dmax]{};
+//
+//    spd::get("logger")->info("Start BTER setup");
+//    BTERSetupResult bterSetupResult{
+//            id, ndprime,
+//            wd, rdfill, ndfill, wg, ig, bg, ng
+//    };
+//
+//    BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
+//    bterSetup.run();
+//    spd::get("logger")->info("Finished BTER setup");
+//
+//    // Setup timer
+//    std::chrono::time_point <std::chrono::system_clock> start, end;
+//    std::chrono::duration<double> elapsed_seconds;
+//
+//    // COMPUTE PHASES
+//    spd::get("logger")->info("Start computing phases");
+//    start = std::chrono::system_clock::now();
+//    BterPhasesGpu bterPhasesGpu(&bterSetupResult, dmax, nd, cd);
+//    bterPhasesGpu.computeSamples();
+//    end = std::chrono::system_clock::now();
+//    elapsed_seconds = end - start;
+//    spd::get("logger")->info("Finished computing phase, took {} seconds", elapsed_seconds.count());
+//
+//    // PHASE ONE
+//    spd::get("logger")->info("Start phase one");
+//    start = std::chrono::system_clock::now();
+//    int *phase_one_i = new int[bterPhasesGpu.bterSamples.s1];
+//    int *phase_one_j = new int[bterPhasesGpu.bterSamples.s1];
+//    bterPhasesGpu.phaseOne(phase_one_i, phase_one_j);
+//    end = std::chrono::system_clock::now();
+//    elapsed_seconds = end - start;
+//    spd::get("logger")->info("Finished phase one, took {} seconds", elapsed_seconds.count());
+//
+//    // PHASE TWO
+//    spd::get("logger")->info("Start phase two");
+//    start = std::chrono::system_clock::now();
+//    int *phase_two_i = new int[bterPhasesGpu.bterSamples.s2];
+//    int *phase_two_j = new int[bterPhasesGpu.bterSamples.s2];
+//    bterPhasesGpu.phaseTwo(phase_two_i, phase_two_j);
+//    end = std::chrono::system_clock::now();
+//    elapsed_seconds = end - start;
+//    spd::get("logger")->info("Finished phase two, took {} seconds", elapsed_seconds.count());
+//
+//#ifdef VALUES
+//    std::cout << "\nPHASE ONE: \n";
+//    for (int i = 0; i < bterPhasesGpu.bterSamples.s1; ++i)
+//        std::cout << "[" << phase_one_i[i] << " - " << phase_one_j[i] << "] ";
+//
+//    std::cout << std::endl;
+//
+//    std::cout << "\nPHASE TWO: \n";
+//    for (int i = 0; i < bterPhasesGpu.bterSamples.s2; ++i)
+//        std::cout << "[" << phase_two_i[i] << " - " << phase_two_j[i] << "] ";
+//#endif
+//
+//    spd::get("logger")->info("Freeing memory");
+//    delete[] id;
+//    delete[] wd;
+//    delete[] rdfill;
+//    delete[] ndfill;
+//    delete[] wg;
+//    delete[] ig;
+//    delete[] bg;
+//    delete[] ng;
+//    delete[] ndprime;
+//
+//    delete[] phase_one_i;
+//    delete[] phase_one_j;
+//
+//    delete[] phase_two_i;
+//    delete[] phase_two_j;
 
     return 0;
 }
