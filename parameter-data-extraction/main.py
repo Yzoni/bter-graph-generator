@@ -34,6 +34,12 @@ class ParameterExtraction:
     def _get_pseudo_diameter(self, graph: Graph):
         return pseudo_diameter(graph)[0]
 
+    def _get_assortativity(self, graph: Graph):
+        return assortativity(graph, 'total')[0]
+
+    def _get_scalar_assortativity(self, graph: Graph):
+        return scalar_assortativity(graph, 'total')[0]
+
     def plot_data(self, csv_file: str):
         p = Path(csv_file)
         if p.exists():
@@ -53,7 +59,9 @@ class ParameterExtraction:
                    self._get_num_vertices,
                    self._get_ccd,
                    self._get_avg_deg,
-                   self._get_pseudo_diameter]
+                   self._get_pseudo_diameter,
+                   self._get_assortativity,
+                   self._get_scalar_assortativity]
 
         f = csv.writer(open(self.export_file, 'w'))
         f.writerow(map(lambda x: x.__name__, columns))
@@ -70,7 +78,7 @@ class ParameterExtraction:
             f.writerow(column_values)
 
 
-def learn(csv_file: str):
+def learn_diameter(csv_file: str):
     reg = linear_model.LinearRegression()
     arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
     y = np.vstack((arr[2], arr[3]))
@@ -78,7 +86,7 @@ def learn(csv_file: str):
 
     reg.fit(x.reshape(-1, 1), y.T)
 
-    predict_size = 12
+    predict_size = 20
     predicted = [reg.predict(x) for x in np.arange(predict_size)]
     predicted = np.concatenate(predicted).T
 
@@ -87,10 +95,40 @@ def learn(csv_file: str):
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(y[0], y[1], x)
     ax.plot(predicted[0], predicted[1], np.arange(predict_size), color='r')
+
+    ax.set_xlabel('Clustering coefficient')
+    ax.set_ylabel('Average global degree')
+    ax.set_zlabel('Diameter')
     plt.show()
 
+    return reg.coef_
+
+def learn_scalar_assortativity(csv_file: str):
+    reg = linear_model.LinearRegression()
+    arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
+    y = np.vstack((arr[2], arr[3]))
+    x = np.vstack((arr[6])).reshape((len(arr[6]),))
+
+    reg.fit(x.reshape(-1, 1), y.T)
+
+    predicted = [reg.predict(x) for x in np.arange(-0.5, 0.5, 0.001)]
+    predicted = np.concatenate(predicted).T
+
+    # Plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(y[0], y[1], x)
+    ax.plot(predicted[0], predicted[1], np.arange(-0.5, 0.5, 0.001), color='r')
+
+    ax.set_xlabel('Clustering coefficient')
+    ax.set_ylabel('Average global degree')
+    ax.set_zlabel('Scalar Assortativity')
+    plt.show()
+
+    return reg.coef_
 
 if __name__ == '__main__':
     p = ParameterExtraction('data', 'parameters.csv')
-    p.run()
-    learn('parameters.csv')
+    # p.run()
+    learn_diameter('parameters.csv')
+    learn_scalar_assortativity('parameters.csv')
