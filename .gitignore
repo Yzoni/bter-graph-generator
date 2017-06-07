@@ -3,3 +3,7 @@
 cmake-build-debug
 test/lib
 *.iml
+
+/**/*.csv
+parameter-data-extraction/data
+!parameter-data-extraction/data/README.md
