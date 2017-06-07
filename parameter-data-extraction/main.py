@@ -58,10 +58,13 @@ class ParameterExtraction:
         f = csv.writer(open(self.export_file, 'w'))
         f.writerow(map(lambda x: x.__name__, columns))
         for file in self._iterate_edge_lists():
+
+            # Get data properties
             with open(file, 'r') as c:
                 dialect = csv.Sniffer().sniff(c.read(1024))
-                csv_options = {"delimter": dialect.delimiter, "quatechar": dialect.quotechar}
+                csv_options = {"delimiter": dialect.delimiter, "quotechar": dialect.quotechar}
 
+            # Create graph and write specified columns to new csv file
             g = load_graph_from_csv(file, directed=False, csv_options=csv_options)
             column_values = [c(g) for c in columns]
             f.writerow(column_values)
@@ -71,7 +74,7 @@ def learn(csv_file: str):
     reg = linear_model.LinearRegression()
     arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
     y = np.vstack((arr[2], arr[3]))
-    x = np.vstack((arr[4])).reshape((1114,))
+    x = np.vstack((arr[4])).reshape((len(arr[4]),))
 
     reg.fit(x.reshape(-1, 1), y.T)
 

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rsync -avz bter_seq das:/home/ydeboer/ && ssh das ./home/ydeboer/buildrun
+rsync -avz . das:/home/ydeboer/bter-graph-generator && ssh das /home/ydeboer/buildrun
