@@ -15,7 +15,7 @@ namespace bter {
         double *nd, *cd, *beta;
         int *id, *ndprime;
         double *wd, *rdfill, *ndfill, *wg, *ig, *bg, *ng;
-        int dmax;
+        size_t dmax;
 
     public:
         int load_parameters();
@@ -31,7 +31,7 @@ namespace bter {
         BTERSetup(double *nd,
                   double *cd,
                   double *beta,
-                  int dmax,
+                  size_t dmax,
                   BTERSetupResult *bterSetupResult);
     };
 }

@@ -12,7 +12,7 @@ namespace bter {
             double *nd,
             double *cd,
             double *beta,
-            int dmax,
+            size_t dmax,
             BTERSetupResult *bterSetupResult
     ) : nd(nd), cd(cd),
         beta(beta),

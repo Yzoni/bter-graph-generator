@@ -7,7 +7,6 @@
 #include "spdlog/spdlog.h"
 #include "BterPhasesGpu.h"
 #include "BterPhasesSeq.h"
-#include "BterSamples.h"
 
 #define VALUES
 
@@ -108,7 +107,7 @@ void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_ed
      * Start C++ library
      */
     double beta = 1;
-    int dmax = nd_vector.size();
+    size_t dmax = nd_vector.size();
 
     int *id = new int[dmax]{};
     double *wd = new double[dmax]{};
@@ -212,7 +211,7 @@ void singleBenchmarkSeq(std::ofstream &outfile_timing, std::ofstream &outfile_ed
      * Start C++ library
      */
     double beta = 1;
-    int dmax = nd_vector.size();
+    size_t dmax = nd_vector.size();
 
     int *id = new int[dmax]{};
     double *wd = new double[dmax]{};
@@ -340,8 +339,8 @@ int main() {
     outfile_edgelist.open("edge_list.csv");
 
     Parameters parameters = {
-            10000,
-            1000,
+            1000000,
+            100000,
             32,
             0.95,
             0.15

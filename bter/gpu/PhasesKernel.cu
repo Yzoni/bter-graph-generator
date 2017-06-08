@@ -4,15 +4,16 @@
 #include <stdio.h>
 
 __global__ void
-setup_random_kernel(curandState *state, unsigned long seed, int length) {
+setup_random_kernel(curandState *state, unsigned long seed, int length, int offset) {
     int idx = blockIdx.x * threadIdx.x * blockDim.x;
     if (idx < length) {
-        curand_init(seed, idx, 0, &state[idx]);
+//        printf("seed %d, length: %d, idx: %d \n", seed, length, idx);
+        curand_init(seed, idx, 0, &state[idx + offset]);
     }
 }
 
 __global__ void
-get_random_array(curandState *state, unsigned long seed, int length, double *out_array) {
+get_random_array(curandState *state, int length, double *out_array) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
         out_array[idx] = curand_uniform(&state[idx]);
