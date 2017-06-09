@@ -73,7 +73,7 @@ class ParameterSearch:
     def degree_distribution_parameter_search(self):
         handle = lambda x: self.evaluate_degree_distribution(x[0], x[1])
         xopt = scipy.optimize.fmin(func=handle, x0=[2, 2], xtol=1e-4, ftol=1e-4)
-        print('degree distribution search; alpha: ' + xopt[0] + 'beta: ' + xopt[1])
+        print('degree distribution search; alpha: ' + str(xopt[0]) + 'beta: ' + str(xopt[1]))
         return xopt
 
     def generate_degree_distribution(self, pdf, cutoff=0):
