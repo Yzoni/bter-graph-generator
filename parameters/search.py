@@ -111,7 +111,7 @@ class ParameterSearch:
         handle = lambda x: self._compute_objective(nd, x)
         xopt = scipy.optimize.fmin(func=handle, x0=[0.5], xtol=1e-4, ftol=1e-4)
 
-        print('optimal xi: ' + xopt[0])
+        print('optimal xi: ' + str(xopt[0]))
         return xopt[0], np.where(nd > 0)[0][-1]
 
     def _compute_objective(self, nd, xi):
