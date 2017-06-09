@@ -73,6 +73,7 @@ class ParameterSearch:
     def degree_distribution_parameter_search(self):
         handle = lambda x: self.evaluate_degree_distribution(x[0], x[1])
         xopt = scipy.optimize.fmin(func=handle, x0=[2, 2], xtol=1e-4, ftol=1e-4)
+        print('degree distribution search; alpha: ' + xopt[0] + 'beta: ' + xopt[1])
         return xopt
 
     def generate_degree_distribution(self, pdf, cutoff=0):
@@ -83,6 +84,8 @@ class ParameterSearch:
         :param cutoff:
         :return:
         """
+
+        print('Generating degree distribution')
 
         dd1 = np.round(self.n * pdf[:cutoff])
         n1 = np.sum(cutoff)  # Todo
@@ -120,6 +123,8 @@ class ParameterSearch:
         return y
 
     def target_clustering_coefficient_per_degree(self, xi, max_degree):
+        print('Target clustering coefficient per degree')
+
         return self.max_ccd_target * np.exp(-np.arange(0, max_degree + 1, 1) * xi)
 
     @staticmethod
