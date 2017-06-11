@@ -30,7 +30,7 @@ namespace bter {
 
     /**
      * Everything but the top 2 elements, after the inverse cumsum,
-%    * with a 0 on the first and last element appended.
+     * with a 0 on the first and last element appended.
      * @param ndprime
      */
     void BTERSetup::compute_degree_greater_then() {

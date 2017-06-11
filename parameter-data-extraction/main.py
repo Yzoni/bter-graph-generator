@@ -7,6 +7,7 @@ from sklearn import linear_model
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
+
 class ParameterExtraction:
     def __init__(self, graphs_path: str, export_file: str) -> None:
         super().__init__()

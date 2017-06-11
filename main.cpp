@@ -339,9 +339,9 @@ int main() {
     outfile_edgelist.open("edge_list.csv");
 
     Parameters parameters = {
-            1000000,
-            100000,
-            32,
+            500,
+            300,
+            10,
             0.95,
             0.15
     };

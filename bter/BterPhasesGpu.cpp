@@ -57,7 +57,10 @@ namespace bter {
     }
 
     void BterPhasesGpu::computeSamples() {
+        // Summed weight phase one
         double wg_sum = std::accumulate(bterSetupResult->wg, &bterSetupResult->wg[dmax], 0.0, std::plus<double>());
+
+        // Summed weight phase two
         double wd_sum = std::accumulate(bterSetupResult->wd, &bterSetupResult->wd[dmax], 0.0, std::plus<double>());
         double w = wg_sum + wd_sum;
 
@@ -76,6 +79,7 @@ namespace bter {
         spd::get("logger")->info("Finished computeSamples() generate random, took {} seconds", elapsed_seconds.count());
 
         double t = (wg_sum / w);
+        spd::get("logger")->info("Start computeSamples() t value {}", t);
 
         spd::get("logger")->info("Start computeSamples() samples s1");
         start = std::chrono::system_clock::now();
