@@ -6,7 +6,10 @@ from graph_tool.all import *
 from sklearn import linear_model
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-
+import math
+import networkx as nx
+from scipy.stats import spearmanr
+from tabulate import tabulate
 
 class ParameterExtraction:
     def __init__(self, graphs_path: str, export_file: str) -> None:
@@ -41,6 +44,79 @@ class ParameterExtraction:
     def _get_scalar_assortativity(self, graph: Graph):
         return scalar_assortativity(graph, 'total')[0]
 
+    def _get_density(self, graph: Graph):
+        return (2 * graph.num_edges()) / (graph.num_vertices() * (graph.num_vertices() - 1))
+
+    """
+    DEGREE
+    """
+    def _get_min_deg(self, graph: Graph):
+        min_degree = math.inf
+        for v in graph.vertices():
+            degree = v.out_degree()
+            if (degree < min_degree):
+                min_degree = degree
+        return min_degree
+
+    def _get_max_deg(self, graph: Graph):
+        max_degree = -1
+        for v in graph.vertices():
+            degree = v.out_degree()
+            if (degree > max_degree):
+                max_degree = degree
+        return  max_degree
+
+    """
+    VERTEX BETWEENNESS
+    """
+    def _get_max_vertex_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return max(vertex_betweenness.get_array())
+
+    def _get_min_vertex_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return min(vertex_betweenness.get_array())
+
+    def _get_mean_vertex_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return np.mean(vertex_betweenness.get_array())
+
+    def _get_std_vertex_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return np.std(vertex_betweenness.get_array())
+
+    """
+    EDGE BETWEENNESS
+    """
+    def _get_max_edge_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return max(edge_betweenness.get_array())
+
+    def _get_min_edge_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return min(edge_betweenness.get_array())
+
+    def _get_mean_edge_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return np.mean(edge_betweenness.get_array())
+
+    def _get_std_edge_betweenness(self, graph: Graph):
+        vertex_betweenness, edge_betweenness = betweenness(graph)
+        return np.std(edge_betweenness.get_array())
+
+    """
+    CLIQUE
+    """
+    def _get_clique_number(self, graph: nx.Graph):
+        return nx.graph_clique_number(graph)
+
+    def _get_number_of_cliques(self, graph: nx.Graph):
+        return nx.graph_number_of_cliques(graph)
+
+
+    """
+    PLOT
+    """
     def plot_data(self, csv_file: str):
         p = Path(csv_file)
         if p.exists():
@@ -62,20 +138,38 @@ class ParameterExtraction:
                    self._get_avg_deg,
                    self._get_pseudo_diameter,
                    self._get_assortativity,
-                   self._get_scalar_assortativity]
+                   self._get_scalar_assortativity,
+                   self._get_density,
+                   self._get_min_deg,
+                   self._get_max_deg,
+                   self._get_max_vertex_betweenness,
+                   self._get_min_vertex_betweenness,
+                   self._get_mean_vertex_betweenness,
+                   self._get_std_vertex_betweenness,
+                   self._get_max_edge_betweenness,
+                   self._get_min_edge_betweenness,
+                   self._get_mean_edge_betweenness,
+                   self._get_std_edge_betweenness]
+
+        columns_nx = [
+                    self._get_clique_number,
+                    self._get_number_of_cliques
+        ]
 
         f = csv.writer(open(self.export_file, 'w'))
-        f.writerow(map(lambda x: x.__name__, columns))
+        f.writerow(map(lambda x: x.__name__, columns + columns_nx))
         for file in self._iterate_edge_lists():
 
             # Get data properties
             with open(file, 'r') as c:
                 dialect = csv.Sniffer().sniff(c.read(1024))
-                csv_options = {"delimiter": dialect.delimiter, "quotechar": dialect.quotechar}
+                csv_options = {'delimiter': dialect.delimiter, 'quotechar': dialect.quotechar}
 
             # Create graph and write specified columns to new csv file
             g = load_graph_from_csv(file, directed=False, csv_options=csv_options)
+            gx = nx.read_edgelist(file, delimiter=csv_options['delimiter'], create_using=nx.Graph(), edgetype=int)
             column_values = [c(g) for c in columns]
+            column_values += [c(gx) for c in columns_nx]
             f.writerow(column_values)
 
 
@@ -128,8 +222,41 @@ def learn_scalar_assortativity(csv_file: str):
 
     return reg.coef_
 
+def correlation_spearman(csv_file: str):
+    """
+    Generates a table of spearman correlations for each column of csv
+
+    :param csv_file: csv file name path
+    :return:
+    """
+    with open(csv_file) as f:
+        reader = csv.reader(f)
+        parameters = next(reader)
+
+    arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
+
+    print('Clustering coefficient')
+    cc = [[parameters[i]] + list(spearmanr(arr[2], arr[i])) for i in range(3, arr.shape[0])]
+    print(tabulate(cc, headers=['parameter', 'rho', 'pval']))
+
+    print('\n')
+
+    print('Average degree distribution')
+    avg_deg = [[parameters[i]] + list(spearmanr(arr[3], arr[i])) for i in range(4, arr.shape[0])]
+    print(tabulate(avg_deg, headers=['parameter', 'rho', 'pval']))
+
+def plot_correlation(csv_file: str):
+    arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
+
+    y = arr['_get_ccd']
+    x = arr['_get_density']
+
+    plt.scatter(x, y)
+    plt.show()
+
 if __name__ == '__main__':
     p = ParameterExtraction('data', 'parameters.csv')
     # p.run()
-    learn_diameter('parameters.csv')
-    learn_scalar_assortativity('parameters.csv')
+    # learn_diameter('parameters.csv')
+    # learn_scalar_assortativity('parameters.csv')
+    correlation_spearman('parameters.csv')
