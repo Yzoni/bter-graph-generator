@@ -24,10 +24,10 @@ namespace bter {
     }
 
     void BterPhasesSeq::randomSample(double *wg, int nsamples, int *binindices) {
-        int last_element = dmax - 1; // hack
+        unsigned long last_element = dmax - 1; // hack
 
         double wg_sum = std::accumulate(wg, &wg[dmax], 0.0, std::plus<double>());
-        for (int i = 1; i < dmax; ++i) {
+        for (unsigned long i = 1; i < dmax; ++i) {
             wg[i] = wg[i] * nsamples / wg_sum;
             if (wg[i] == 0) {
                 last_element = i;
@@ -64,33 +64,18 @@ namespace bter {
 
         int nsmp = (int) std::round(w);
 
-        // Setup timer
-        std::chrono::time_point<std::chrono::system_clock> start, end;
-        std::chrono::duration<double> elapsed_seconds;
-
-        spd::get("logger")->info("Start computeSamples() generate random");
-        start = std::chrono::system_clock::now();
         double *r = new double[nsmp];
         for (int i = 0; i < nsmp; ++i) {
             r[i] = randomUnified(0, 1);
         }
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished computeSamples() generate random, took {} seconds", elapsed_seconds.count());
 
         double t = (wg_sum / w);
 
-        spd::get("logger")->info("Start computeSamples() samples s1");
-        start = std::chrono::system_clock::now();
         for (int i = 0; i < nsmp; ++i) {
             if (r[i] < t) {
                 ++bterSamples.s1;
             }
         }
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished computeSamples() samples s1, took {} seconds", elapsed_seconds.count());
-
         bterSamples.s2 = nsmp - bterSamples.s1;
 
         delete[] r;
@@ -104,15 +89,8 @@ namespace bter {
         std::chrono::duration<double> elapsed_seconds;
 
         // Get group samples
-        spd::get("logger")->info("Start phaseOnePrepare() randomSample");
-        start = std::chrono::system_clock::now();
         randomSample(bterSetupResult->wg, bterSamples.s1, group_sample);
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished phaseOnePrepare() random sample, took {} seconds", elapsed_seconds.count());
 
-        spd::get("logger")->info("Start phaseOnePrepare() loop");
-        start = std::chrono::system_clock::now();
         int k, sample;
         for (k = 0; k < bterSamples.s1; ++k) {
             sample = group_sample[k] - 1;
@@ -120,9 +98,7 @@ namespace bter {
             block_i[k] = bterSetupResult->ig[sample]; // Number of affinity block in group g
             block_n[k] = bterSetupResult->ng[sample]; // Number of of nodes in group g
         }
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished phaseOnePrepare() loop, took {} seconds", elapsed_seconds.count());
+
 
     }
 
@@ -185,13 +161,6 @@ namespace bter {
                                             double *phase_two_rd_fill) {
         int *degree_sample = new int[bterSamples.s2]();
 
-        // Setup timer
-        std::chrono::time_point<std::chrono::system_clock> start, end;
-        std::chrono::duration<double> elapsed_seconds;
-
-        // Get group samples
-
-        // Excess degree sample
         randomSample(bterSetupResult->wd, bterSamples.s2, degree_sample);
 
         int i, sample;
@@ -222,9 +191,9 @@ namespace bter {
                             phase_two_shift_bulk, phase_two_sz_bulk,
                             phase_two_rd_fill);
 
-        double phase_two_fill, phase_two_bulk, r;
+        double phase_two_fill, phase_two_bulk, r, ra;
         for (int i = 0; i < bterSamples.s2; ++i) {
-            double ra = randomUnified(0, 1);
+            ra = randomUnified(0, 1);
             phase_two_fill = phase_two_shift_fill[i] + floor(ra * phase_two_sz_fill[i]);
             phase_two_bulk = phase_two_shift_bulk[i] + floor(ra * phase_two_sz_bulk[i]);
 

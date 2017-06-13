@@ -169,19 +169,9 @@ namespace bter {
                                             double *phase_two_rd_fill) {
         int *degree_sample = new int[bterSamples.s2]();
 
-        // Setup timer
-        std::chrono::time_point<std::chrono::system_clock> start, end;
-        std::chrono::duration<double> elapsed_seconds;
 
-        // Get group samples
-        spd::get("logger")->info("Start phaseTwoNodePrepare() randomSample");
-        start = std::chrono::system_clock::now();
         // Excess degree sample
         randomSample(bterSetupResult->wd, bterSamples.s2, degree_sample);
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished phaseTwoNodePrepare() random sample, took {} seconds",
-                                 elapsed_seconds.count());
 
         int i, sample;
         for (i = 0; i < bterSamples.s2; ++i) {
@@ -206,21 +196,12 @@ namespace bter {
 
         double *phase_two_rd_fill = new double[bterSamples.s2];
 
-        // Setup timer
-        std::chrono::time_point<std::chrono::system_clock> start, end;
-        std::chrono::duration<double> elapsed_seconds;
-
         // Get group samples
-        spd::get("logger")->info("Start phaseTwoNodeGpu() prepare");
-        start = std::chrono::system_clock::now();
+
         phaseTwoNodePrepare(id_bulk, nd_bulk,
                             phase_two_shift_fill, phase_two_sz_fill,
                             phase_two_shift_bulk, phase_two_sz_bulk,
                             phase_two_rd_fill);
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished phaseTwoNodeGpu() prepare, took {} seconds", elapsed_seconds.count());
-
 
         cuda_wrapper_phase_two(phase_two,
                                phase_two_shift_fill, phase_two_sz_fill,
