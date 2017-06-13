@@ -1,11 +1,21 @@
-Build
+Build steps
 
-1. git clone https://gitlab.com/Yzoni/bter-graph-generator
+1. Clone repo
+```bash
+git clone https://gitlab.com/Yzoni/bter-graph-generator && \
+git clone https://github.com/google/googletest bter-graph-generator/test/lib
+```
+2. Create build directory
+```bash
+mkdir out && cd out
+```
 
-2. mkdir -p out
+3. Make
+```bash
+cmake ../bter-graph-generator && make
+```
 
-3. cd out
-
-4. cmake ../bter-graph-generator
-
-5. make
+4. Run
+```bash
+./bter_run
+```
