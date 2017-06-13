@@ -2,21 +2,24 @@
 #include <curand.h>
 #include <curand_kernel.h>
 #include <stdio.h>
+#include <ctime>
 
 __global__ void
-setup_random_kernel(curandState *state, unsigned long seed, int length, int offset) {
+setup_random_kernel(curandState *state, int length, int offset) {
     int idx = blockIdx.x * threadIdx.x * blockDim.x;
     if (idx < length) {
-//        printf("seed %d, length: %d, idx: %d \n", seed, length, idx);
-        curand_init(seed, idx, 0, &state[idx + offset]);
+        curand_init((unsigned long long) clock() + idx, idx, 0, &state[idx + offset]);
     }
 }
 
 __global__ void
 get_random_array(curandState *state, int length, double *out_array) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
     if (idx < length) {
-        out_array[idx] = curand_uniform(&state[idx]);
+        curandState localState = state[idx];
+        out_array[idx] = curand_uniform_double(&localState);
+        state[idx] = localState;
     }
 }
 
@@ -84,11 +87,11 @@ phase_two_bulk(double *phase_two_shift_bulk, double *phase_two_sz_bulk, double *
 }
 
 __global__ void
-phase_two_d(double *phase_two_fill, double *phase_two_bulk, int *phase_two,
+phase_two_d(double *phase_two_fill, double *phase_two_bulk, int *phase_two, double *phase_two_rd_fill,
             curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
-        if (curand_uniform(&state[idx]) < phase_two_fill[idx]) {
+        if (curand_uniform(&state[idx]) < phase_two_rd_fill[idx]) {
             phase_two[idx] = (int) __double2int_rn(phase_two_fill[idx]);
         } else {
             phase_two[idx] = (int) __double2int_rn(phase_two_bulk[idx]);

@@ -15,21 +15,23 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 }
 
 void cuda_setup_random_kernel(int length, curandState *devStates) {
-    int blocksize = 256;
+    int blocksize = 512;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
+    setup_random_kernel << < nblock, blocksize >> > (devStates, length, 0);
 
-    int topblock = 32000; // Seems to be close to the max number of block for random init
-    for (int i = topblock; i < (nblock + topblock); i += topblock) {
-        if (i > nblock) {
-            setup_random_kernel << < i - nblock, blocksize >> > (devStates, time(NULL), i - nblock , i - nblock);
-            gpuErrchk(cudaPeekAtLastError());
-            gpuErrchk(cudaDeviceSynchronize());
-        } else {
-            setup_random_kernel << < topblock, blocksize >> > (devStates, time(NULL), topblock, i);
-            gpuErrchk(cudaPeekAtLastError());
-            gpuErrchk(cudaDeviceSynchronize());
-        }
-    }
+
+//    int topblock = 1500; // Seems to be close to the max number of block for random init
+//    for (int i = topblock; i < (nblock + topblock); i += topblock) {
+//        if (i > nblock) {
+//            setup_random_kernel << < i - nblock, blocksize >> > (devStates, time(NULL), i - nblock , i - nblock);
+//            gpuErrchk(cudaPeekAtLastError());
+//            gpuErrchk(cudaDeviceSynchronize());
+//        } else {
+//            setup_random_kernel << < 1, blocksize >> > (devStates, time(NULL), topblock, i);
+//            gpuErrchk(cudaPeekAtLastError());
+//            gpuErrchk(cudaDeviceSynchronize());
+//        }
+//    }
 }
 
 void cuda_wrapper_rand_array(int length, double *out_array) {
@@ -43,7 +45,7 @@ void cuda_wrapper_rand_array(int length, double *out_array) {
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    int blocksize = 256;
+    int blocksize = 512;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
 
     cuda_setup_random_kernel(length, devStates);
@@ -129,6 +131,7 @@ void cuda_wrapper_phase_one(int *i, int *j,
 void cuda_wrapper_phase_two(int *phase_two,
                             double *phase_two_shift_fill, double *phase_two_sz_fill,
                             double *phase_two_shift_bulk, double *phase_two_sz_bulk,
+                            double *phase_two_rd_fill,
                             int length) {
 
     curandState *devStates;
@@ -138,6 +141,7 @@ void cuda_wrapper_phase_two(int *phase_two,
 
     double *cuda_shift_fill, *cuda_sz_fill;
     double *cuda_shift_bulk, *cuda_sz_bulk;
+    double *cuda_rd_fill;
 
     size_t size_output = length * sizeof(int);
     size_t size_input = length * sizeof(double);
@@ -150,6 +154,8 @@ void cuda_wrapper_phase_two(int *phase_two,
     gpuErrchk(cudaMalloc((void **) &cuda_shift_bulk, size_input));
     gpuErrchk(cudaMalloc((void **) &cuda_sz_bulk, size_input));
 
+    gpuErrchk(cudaMalloc((void **) &cuda_rd_fill, size_input));
+
     double *cuda_fill, *cuda_bulk;
     gpuErrchk(cudaMalloc((void **) &cuda_fill, size_input));
     gpuErrchk(cudaMalloc((void **) &cuda_bulk, size_input));
@@ -159,6 +165,8 @@ void cuda_wrapper_phase_two(int *phase_two,
 
     gpuErrchk(cudaMemcpy(cuda_shift_bulk, phase_two_shift_bulk, size_input, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(cuda_sz_bulk, phase_two_sz_bulk, size_input, cudaMemcpyHostToDevice));
+
+    gpuErrchk(cudaMemcpy(cuda_rd_fill, phase_two_rd_fill, size_input, cudaMemcpyHostToDevice));
 
     int blocksize = 256;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
@@ -174,7 +182,7 @@ void cuda_wrapper_phase_two(int *phase_two,
     gpuErrchk(cudaDeviceSynchronize());
 
     cuda_setup_random_kernel(length, devStates);
-    phase_two_d << < nblock, blocksize >> > (cuda_fill, cuda_bulk, cuda_phase_two, devStates, length);
+    phase_two_d << < nblock, blocksize >> > (cuda_fill, cuda_bulk, cuda_phase_two, cuda_rd_fill, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 

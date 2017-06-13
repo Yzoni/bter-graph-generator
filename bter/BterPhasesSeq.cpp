@@ -65,7 +65,7 @@ namespace bter {
         int nsmp = (int) std::round(w);
 
         // Setup timer
-        std::chrono::time_point <std::chrono::system_clock> start, end;
+        std::chrono::time_point<std::chrono::system_clock> start, end;
         std::chrono::duration<double> elapsed_seconds;
 
         spd::get("logger")->info("Start computeSamples() generate random");
@@ -100,7 +100,7 @@ namespace bter {
     void BterPhasesSeq::phaseOnePrepare(int *group_sample, double *block_b, double *block_i, double *block_n) {
 
         // Setup timer
-        std::chrono::time_point <std::chrono::system_clock> start, end;
+        std::chrono::time_point<std::chrono::system_clock> start, end;
         std::chrono::duration<double> elapsed_seconds;
 
         // Get group samples
@@ -165,6 +165,8 @@ namespace bter {
         int i;
         double *id_bulk = new double[dmax];
         double *nd_bulk = new double[dmax];
+
+        nd_bulk[0] = 0;
         for (i = 0; i < dmax; ++i) {
             id_bulk[i] = bterSetupResult->id[i] + bterSetupResult->ndfill[i];
             nd_bulk[i] = nd[i] - bterSetupResult->ndfill[i];
@@ -179,30 +181,28 @@ namespace bter {
 
     void BterPhasesSeq::phaseTwoNodePrepare(double *id_bulk, double *nd_bulk,
                                             double *phase_two_shift_fill, double *phase_two_sz_fill,
-                                            double *phase_two_shift_bulk, double *phase_two_sz_bulk) {
+                                            double *phase_two_shift_bulk, double *phase_two_sz_bulk,
+                                            double *phase_two_rd_fill) {
         int *degree_sample = new int[bterSamples.s2]();
 
         // Setup timer
-        std::chrono::time_point <std::chrono::system_clock> start, end;
+        std::chrono::time_point<std::chrono::system_clock> start, end;
         std::chrono::duration<double> elapsed_seconds;
 
         // Get group samples
-        spd::get("logger")->info("Start phaseTwoNodePrepare() randomSample");
-        start = std::chrono::system_clock::now();
+
         // Excess degree sample
         randomSample(bterSetupResult->wd, bterSamples.s2, degree_sample);
-        end = std::chrono::system_clock::now();
-        elapsed_seconds = end - start;
-        spd::get("logger")->info("Finished phaseTwoNodePrepare() random sample, took {} seconds",
-                                 elapsed_seconds.count());
 
         int i, sample;
         for (i = 0; i < bterSamples.s2; ++i) {
-            sample = degree_sample[i] - 1;
+            sample = degree_sample[i];
             phase_two_shift_fill[i] = bterSetupResult->id[sample];
             phase_two_sz_fill[i] = bterSetupResult->ndfill[sample];
             phase_two_shift_bulk[i] = id_bulk[sample];
             phase_two_sz_bulk[i] = nd_bulk[sample];
+
+            phase_two_rd_fill[i] = bterSetupResult->rdfill[sample];
         }
 
         delete[] degree_sample;
@@ -215,17 +215,21 @@ namespace bter {
         double *phase_two_shift_bulk = new double[bterSamples.s2];
         double *phase_two_sz_bulk = new double[bterSamples.s2];
 
+        double *phase_two_rd_fill = new double[bterSamples.s2];
+
         phaseTwoNodePrepare(id_bulk, nd_bulk,
                             phase_two_shift_fill, phase_two_sz_fill,
-                            phase_two_shift_bulk, phase_two_sz_bulk);
+                            phase_two_shift_bulk, phase_two_sz_bulk,
+                            phase_two_rd_fill);
 
         double phase_two_fill, phase_two_bulk, r;
         for (int i = 0; i < bterSamples.s2; ++i) {
-            phase_two_fill = phase_two_shift_fill[i] + floor(randomUnified(0, 1) * phase_two_sz_fill[i]);
-            phase_two_bulk = phase_two_shift_bulk[i] + floor(randomUnified(0, 1) * phase_two_sz_bulk[i]);
+            double ra = randomUnified(0, 1);
+            phase_two_fill = phase_two_shift_fill[i] + floor(ra * phase_two_sz_fill[i]);
+            phase_two_bulk = phase_two_shift_bulk[i] + floor(ra * phase_two_sz_bulk[i]);
 
             r = randomUnified(0, 1);
-            if (r < phase_two_fill) {
+            if (r < phase_two_rd_fill[i]) {
                 phase_two[i] = (int) std::round(phase_two_fill);
             } else {
                 phase_two[i] = (int) std::round(phase_two_bulk);

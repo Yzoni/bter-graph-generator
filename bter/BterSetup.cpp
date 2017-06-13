@@ -59,7 +59,7 @@ namespace bter {
      */
     void BTERSetup::handle_degree_one() {
         ndfill[0] = nd[0] * *beta;
-        rdfill[0] = nd[0] * 0.5;
+        rdfill[0] = 1;
         wd[0] = 0.5 * nd[0];
     }
 

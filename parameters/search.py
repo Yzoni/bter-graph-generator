@@ -18,8 +18,7 @@ class ParameterSearch:
         pdf = p.discrete_generalized_log_normal_probability(alpha, beta)
         nd = p.generate_degree_distribution(pdf)
         xi, max_degree = p.optimal_xi(nd, pdf)
-
-        ccd = p.target_clustering_coefficient_per_degree(xi, max_degree)
+        ccd = p.compute_ccd(xi, max_degree).tolist()
 
         return nd, ccd
 
@@ -38,8 +37,7 @@ class ParameterSearch:
         pdf = p.discrete_generalized_log_normal_probability(alpha, beta)
         nd = p.generate_degree_distribution(pdf)
         xi, max_degree = p.optimal_xi(nd, pdf)
-
-        ccd = p.target_clustering_coefficient_per_degree(xi, max_degree).tolist()
+        ccd = p.compute_ccd(xi, max_degree).tolist()
 
         return ccd
 
@@ -116,7 +114,9 @@ class ParameterSearch:
 
     def _compute_objective(self, nd, xi):
         maxd = nd.size
-        ccd_mean = self.max_ccd_target * np.exp(- np.transpose(np.arange(0, maxd, 1) * xi))
+        arr = np.arange(0, maxd, 1) * xi
+        exp_sep = np.exp(- np.transpose(arr))
+        ccd_mean = self.max_ccd_target * exp_sep
 
         n_wedges = np.transpose(nd) * np.arange(1, maxd + 1, 1) * ((np.arange(1, maxd + 1, 1) - 1) / 2)
         gcc_xi = np.dot(n_wedges, ccd_mean) / np.sum(n_wedges)
@@ -125,8 +125,13 @@ class ParameterSearch:
 
     def target_clustering_coefficient_per_degree(self, xi, max_degree):
         print('Target clustering coefficient per degree')
-
         return self.max_ccd_target * np.exp(-np.arange(0, max_degree + 1, 1) * xi)
+
+    def compute_ccd(self, xi, max_degree):
+        ccd_target = self.target_clustering_coefficient_per_degree(xi, max_degree)
+        ccd_stdev = np.minimum((ccd_target / 2), 0.01)
+        ccd = np.maximum(ccd_target * ccd_stdev, 0)
+        return ccd
 
     @staticmethod
     def write_to_file(file_name, nd, ccd):

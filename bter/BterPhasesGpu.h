@@ -13,6 +13,7 @@ void cuda_wrapper_phase_one(int *phase_one_i, int *phase_one_j,
 void cuda_wrapper_phase_two(int *phase_two,
                             double *phase_two_shift_fill, double *phase_two_sz_fill,
                             double *phase_two_shift_bulk, double *phase_two_sz_bulk,
+                            double *phase_two_rd_fill,
                             int length);
 
 namespace bter {
@@ -29,7 +30,8 @@ namespace bter {
 
         void phaseTwoNodePrepare(double *id_bulk, double *nd_bulk,
                                  double *phase_two_shift_fill, double *phase_two_sz_fill,
-                                 double *phase_two_shift_bulk, double *phase_two_sz_bulk);
+                                 double *phase_two_shift_bulk, double *phase_two_sz_bulk,
+                                 double *phase_two_rd_fill);
 
         void phaseTwo(int *phase_two_i, int *phase_one_j);
 
