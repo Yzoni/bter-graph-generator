@@ -1,15 +1,16 @@
-from pathlib import Path
-import glob
 import csv
-import matplotlib.pyplot as plt
-from graph_tool.all import *
-from sklearn import linear_model
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
+import glob
 import math
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import networkx as nx
+import numpy as np
+from graph_tool.all import *
 from scipy.stats import spearmanr
+from sklearn import linear_model
 from tabulate import tabulate
+
 
 class ParameterExtraction:
     def __init__(self, graphs_path: str, export_file: str) -> None:
@@ -255,7 +256,7 @@ def plot_correlation(csv_file: str):
     plt.show()
 
 if __name__ == '__main__':
-    p = ParameterExtraction('data', 'parameters.csv')
+    # p = ParameterExtraction('data', 'parameters.csv')
     # p.run()
     # learn_diameter('parameters.csv')
     # learn_scalar_assortativity('parameters.csv')
