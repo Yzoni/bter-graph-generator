@@ -32,9 +32,6 @@ class ParameterExtraction:
     def _get_ccd(self, graph: Graph):
         return global_clustering(graph)[0]
 
-    def _get_avg_deg(self, graph: Graph):
-        return 2 * (graph.num_edges() / graph.num_vertices())
-
     def _get_pseudo_diameter(self, graph: Graph):
         return pseudo_diameter(graph)[0]
 
@@ -47,9 +44,19 @@ class ParameterExtraction:
     def _get_density(self, graph: Graph):
         return (2 * graph.num_edges()) / (graph.num_vertices() * (graph.num_vertices() - 1))
 
+    def _get_average_shortest_path(self, graph: nx.Graph):
+        return nx.average_shortest_path_length(graph)
+
+    # Degree distribution log normal?
+    def get_degree_sequence(self, graph: nx.Graph):
+        degree_sequence=sorted(nx.degree(G).values(),reverse=True)
+
     """
     DEGREE
     """
+    def _get_avg_deg(self, graph: Graph):
+        return 2 * (graph.num_edges() / graph.num_vertices())
+
     def _get_min_deg(self, graph: Graph):
         min_degree = math.inf
         for v in graph.vertices():
@@ -64,7 +71,7 @@ class ParameterExtraction:
             degree = v.out_degree()
             if (degree > max_degree):
                 max_degree = degree
-        return  max_degree
+        return max_degree
 
     """
     VERTEX BETWEENNESS
@@ -153,7 +160,8 @@ class ParameterExtraction:
 
         columns_nx = [
                     self._get_clique_number,
-                    self._get_number_of_cliques
+                    self._get_number_of_cliques,
+                    self._get_average_shortest_path
         ]
 
         f = csv.writer(open(self.export_file, 'w'))
@@ -167,11 +175,12 @@ class ParameterExtraction:
 
             # Create graph and write specified columns to new csv file
             g = load_graph_from_csv(file, directed=False, csv_options=csv_options)
-            gx = nx.read_edgelist(file, delimiter=csv_options['delimiter'], create_using=nx.Graph(), edgetype=int)
-            column_values = [c(g) for c in columns]
-            column_values += [c(gx) for c in columns_nx]
-            f.writerow(column_values)
-
+            gx = nx.read_edgelist(file, delimiter=csv_options['delimiter'], create_using=nx.Graph(), nodetype=int)
+            if nx.is_connected(gx):
+                column_values = [c(g) for c in columns]
+                column_values += [c(gx) for c in columns_nx]
+                f.writerow(column_values)
+        f.close()
 
 def learn_diameter(csv_file: str):
     reg = linear_model.LinearRegression()
