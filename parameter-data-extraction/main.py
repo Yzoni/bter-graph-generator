@@ -265,8 +265,8 @@ def plot_correlation(csv_file: str):
     plt.show()
 
 if __name__ == '__main__':
-    # p = ParameterExtraction('data', 'parameters.csv')
-    # p.run()
+    p = ParameterExtraction('data', 'parameters.csv')
+    p.run()
     # learn_diameter('parameters.csv')
     # learn_scalar_assortativity('parameters.csv')
     correlation_spearman('parameters.csv')
