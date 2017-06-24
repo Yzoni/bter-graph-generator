@@ -6,9 +6,9 @@
 
 __global__ void
 setup_random_kernel(curandState *state, int length, int offset) {
-    int idx = blockIdx.x * threadIdx.x * blockDim.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
-        curand_init((unsigned long long) clock() + idx, idx, 0, &state[idx + offset]);
+        curand_init((unsigned long long) clock(), idx, 0, &state[idx]);
     }
 }
 
@@ -19,6 +19,7 @@ get_random_array(curandState *state, int length, double *out_array) {
     if (idx < length) {
         curandState localState = state[idx];
         out_array[idx] = curand_uniform_double(&localState);
+        printf("%f,", out_array[idx]);
         state[idx] = localState;
     }
 }

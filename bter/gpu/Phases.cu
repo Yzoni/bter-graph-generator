@@ -18,20 +18,8 @@ void cuda_setup_random_kernel(int length, curandState *devStates) {
     int blocksize = 512;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
     setup_random_kernel << < nblock, blocksize >> > (devStates, length, 0);
-
-
-//    int topblock = 1500; // Seems to be close to the max number of block for random init
-//    for (int i = topblock; i < (nblock + topblock); i += topblock) {
-//        if (i > nblock) {
-//            setup_random_kernel << < i - nblock, blocksize >> > (devStates, time(NULL), i - nblock , i - nblock);
-//            gpuErrchk(cudaPeekAtLastError());
-//            gpuErrchk(cudaDeviceSynchronize());
-//        } else {
-//            setup_random_kernel << < 1, blocksize >> > (devStates, time(NULL), topblock, i);
-//            gpuErrchk(cudaPeekAtLastError());
-//            gpuErrchk(cudaDeviceSynchronize());
-//        }
-//    }
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
 }
 
 void cuda_wrapper_rand_array(int length, double *out_array) {

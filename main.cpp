@@ -387,42 +387,6 @@ void singleBenchmarkSeq(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     delete[] phase_two_j;
 }
 
-void benchmarkSeq(int max_nnodes, int run_count, Parameters *parameters) {
-
-    std::ofstream outfile_timing;
-    outfile_timing.open("cpu_bench.csv");
-    outfile_timing << "nnodes,phase_one_seconds,phase_two_seconds" << std::endl;
-
-    std::ofstream outfile_edgelist;
-    outfile_edgelist.open("edge_list.csv");
-
-    int batch_size;
-    for (int i = 1; i < run_count; ++i) {
-        batch_size = (max_nnodes / run_count) * i;
-        singleBenchmarkSeq(outfile_timing, outfile_edgelist, parameters);
-    }
-
-    outfile_timing.close();
-}
-
-void benchmarkGpu(int max_nnodes, int run_count, Parameters *parameters) {
-
-    std::ofstream outfile_timing;
-    outfile_timing.open("gpu_bench.csv");
-    outfile_timing << "nnodes,phase_one_seconds,phase_two_seconds" << std::endl;
-
-    std::ofstream outfile_edgelist;
-    outfile_edgelist.open("edge_list.csv");
-
-    int batch_size;
-    for (int i = 1; i < run_count; ++i) {
-        batch_size = (max_nnodes / run_count) * i;
-        singleBenchmarkGpu(outfile_timing, outfile_edgelist, parameters);
-    }
-
-    outfile_timing.close();
-}
-
 int main(int argc, char *argv[]) {
 
     int gpu_flag = 0;
