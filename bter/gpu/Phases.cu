@@ -17,6 +17,8 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 void cuda_setup_random_kernel(int length, curandState *devStates) {
     int blocksize = 512;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
+
+    printf("CuRand init: %d nblock: %d and blocksize: %d\n", length, nblock, blocksize);
     setup_random_kernel << < nblock, blocksize >> > (devStates, length, 0);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
@@ -37,15 +39,16 @@ void cuda_wrapper_rand_array(int length, double *out_array) {
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
 
     cuda_setup_random_kernel(length, devStates);
-//    printf("RANDOM ARRAY KERNEL LAUNCH with length: %d nblock: %d and blocksize: %d\n", length, nblock, blocksize);
+    printf("CuRand array: %d nblock: %d and blocksize: %d\n", length, nblock, blocksize);
 
     get_random_array << < nblock, blocksize >> > (devStates, length, cuda_rand_array);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
     cudaMemcpy(out_array, cuda_rand_array, length * sizeof(double), cudaMemcpyDeviceToHost);
-//    for (int i = 0; i < 20; ++i) printf("%f ", out_array[i]);
-//    printf("\n");
+    printf("CuRand produced (f10): ");
+    for (int i = 0; i < 10; ++i) printf("%f ", out_array[i]);
+    printf("\n");
 
     cudaFree(devStates);
 }
