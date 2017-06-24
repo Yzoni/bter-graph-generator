@@ -39,7 +39,7 @@ void cuda_wrapper_rand_array(int length, double *out_array) {
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
 
     cuda_setup_random_kernel(length, devStates);
-    printf("CuRand array: %d nblock: %d and blocksize: %d\n", length, nblock, blocksize);
+    printf("CuRand array: length: %d nblock: %d and blocksize: %d\n", length, nblock, blocksize);
 
     get_random_array << < nblock, blocksize >> > (devStates, length, cuda_rand_array);
     gpuErrchk(cudaPeekAtLastError());
