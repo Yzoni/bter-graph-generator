@@ -19,7 +19,6 @@ get_random_array(curandState *state, int length, double *out_array) {
     if (idx < length) {
         curandState localState = state[idx];
         out_array[idx] = curand_uniform_double(&localState);
-        printf("%f,", out_array[idx]);
         state[idx] = localState;
     }
 }

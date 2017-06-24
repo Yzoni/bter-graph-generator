@@ -9,8 +9,6 @@
 #include "BterPhasesGpu.h"
 #include "BterPhasesSeq.h"
 
-#define VALUES
-
 using namespace bter;
 namespace spd = spdlog;
 
@@ -102,7 +100,7 @@ void parameterInitialize(Parameters *parameters, std::vector<double> *nd_vector,
     spd::get("logger")->info("CD vector copied");
 }
 
-void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_edges, Parameters *parameters) {
+void singleBenchmarkGpu(std::ofstream &outfile_edges, Parameters *parameters) {
 
     std::vector<double> nd_vector;
     std::vector<double> ccd_vector;
@@ -112,16 +110,6 @@ void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     // Get pointer to start of vector array
     double *nd = &nd_vector[0];
     double *cd = &ccd_vector[0];
-
-    std::cout << "nd_vector: \n";
-    for (std::vector<double>::const_iterator i = nd_vector.begin(); i != nd_vector.end(); ++i)
-        std::cout << *i << ' ';
-
-
-    std::cout << "\nccd_vector: \n";
-    for (std::vector<double>::const_iterator i = ccd_vector.begin(); i != ccd_vector.end(); ++i)
-        std::cout << *i << ' ';
-    std::cout << "\n";
 
     spd::get("logger")->info("Allocate new arrays");
 
@@ -151,29 +139,6 @@ void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     bterSetup.run();
     spd::get("logger")->info("Finished BTER setup");
 
-    std::cout << "BG: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.bg[i] << " ";
-    std::cout << "\n";
-    std::cout << "ig: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.ig[i] << " ";
-    std::cout << "\n";
-    std::cout << "ng: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.ng[i] << " ";
-    std::cout << "\n";
-    std::cout << "wg: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.wg[i] << " ";
-    std::cout << "\n";
-    std::cout << "wd: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.wd[i] << " ";
-    std::cout << "\n";
-    std::cout << "rdfill: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.rdfill[i] << " ";
-    std::cout << "\n";
-    std::cout << "ndfill: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.ndfill[i] << " ";
-    std::cout << "\n";
-
-
     // Setup timer
     std::chrono::time_point<std::chrono::system_clock> start, end;
     std::chrono::duration<double> elapsed_seconds;
@@ -195,7 +160,6 @@ void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     bterPhasesGpu.phaseOne(phase_one_i, phase_one_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
-    outfile_timing << parameters->number_of_vertices << "," << elapsed_seconds.count() << ",";
     spd::get("logger")->info("Finished phase one, took {} seconds", elapsed_seconds.count());
 
     // PHASE TWO
@@ -206,10 +170,8 @@ void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     bterPhasesGpu.phaseTwo(phase_two_i, phase_two_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
-    outfile_timing << elapsed_seconds.count() << std::endl;
     spd::get("logger")->info("Finished phase two, took {} seconds", elapsed_seconds.count());
 
-#ifdef VALUES
     spd::get("logger")->info("Phase one write vertices to file");
     for (int i = 0; i < bterPhasesGpu.bterSamples.s1; ++i)
         outfile_edges << phase_one_i[i] << ";" << phase_one_j[i] << "\n";
@@ -219,7 +181,6 @@ void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     spd::get("logger")->info("Phase two write vertices to file");
     for (int i = 0; i < bterPhasesGpu.bterSamples.s2; ++i)
         outfile_edges << phase_two_i[i] << ";" << phase_two_j[i] << " \n";
-#endif
 
     spd::get("logger")->info("Freeing memory");
     delete[] id;
@@ -239,7 +200,7 @@ void singleBenchmarkGpu(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     delete[] phase_two_j;
 }
 
-void singleBenchmarkSeq(std::ofstream &outfile_timing, std::ofstream &outfile_edges, Parameters *parameters) {
+void singleBenchmarkSeq(std::ofstream &outfile_edges, Parameters *parameters) {
 
     std::vector<double> nd_vector;
     std::vector<double> ccd_vector;
@@ -287,30 +248,6 @@ void singleBenchmarkSeq(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     BTERSetup bterSetup(nd, cd, &beta, dmax, &bterSetupResult);
     bterSetup.run();
 
-    std::cout << "BG: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.bg[i] << " ";
-    std::cout << "\n";
-    std::cout << "ig: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.ig[i] << " ";
-    std::cout << "\n";
-    std::cout << "ng: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.ng[i] << " ";
-    std::cout << "\n";
-    std::cout << "wg: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.wg[i] << " ";
-    std::cout << "\n";
-    std::cout << "wd: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.wd[i] << " ";
-    std::cout << "\n";
-    std::cout << "rdfill: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.rdfill[i] << " ";
-    std::cout << "\n";
-    std::cout << "ndfill: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.ndfill[i] << " ";
-    std::cout << "\n";
-    std::cout << "ndprime: \n";
-    for (int i = 0; i < dmax; ++i) std::cout << bterSetupResult.ndprime[i] << " ";
-    std::cout << "\n";
     spd::get("logger")->info("Finished BTER setup");
     double nd_sum = std::accumulate(nd, &nd[dmax], 0.0, std::plus<double>());
     spd::get("logger")->info("Desired number nodes: {}", nd_sum);
@@ -343,7 +280,6 @@ void singleBenchmarkSeq(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     bterPhasesSeq.phaseOne(phase_one_i, phase_one_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
-    outfile_timing << parameters->number_of_vertices << "," << elapsed_seconds.count() << ",";
     spd::get("logger")->info("Finished phase one, took {} seconds", elapsed_seconds.count());
 
     // PHASE TWO
@@ -354,20 +290,15 @@ void singleBenchmarkSeq(std::ofstream &outfile_timing, std::ofstream &outfile_ed
     bterPhasesSeq.phaseTwo(phase_two_i, phase_two_j);
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
-    outfile_timing << elapsed_seconds.count() << std::endl;
     spd::get("logger")->info("Finished phase two, took {} seconds", elapsed_seconds.count());
 
-#ifdef VALUES
     spd::get("logger")->info("Phase one write vertices to file");
     for (int i = 0; i < bterPhasesSeq.bterSamples.s1; ++i)
         outfile_edges << phase_one_i[i] << ";" << phase_one_j[i] << "\n";
 
-    std::cout << std::endl;
-
     spd::get("logger")->info("Phase two write vertices to file");
     for (int i = 0; i < bterPhasesSeq.bterSamples.s2; ++i)
         outfile_edges << phase_two_i[i] << ";" << phase_two_j[i] << " \n";
-#endif
 
     spd::get("logger")->info("Freeing memory");
     delete[] id;
@@ -396,6 +327,7 @@ int main(int argc, char *argv[]) {
     int average_degree_target = -1;
     float max_clustering_coefficient_target = -1;
     float global_clustering_coefficient_target = -1;
+    char *edge_list_filename = NULL;
 
     int c;
     int option_count = 7;
@@ -408,10 +340,11 @@ int main(int argc, char *argv[]) {
                 {"average_degree_target",                required_argument, 0, 'd'},
                 {"max_clustering_coefficient_target",    required_argument, 0, 'm'},
                 {"global_clustering_coefficient_target", required_argument, 0, 'c'},
+                {"file", required_argument, 0, 'f'},
                 {"gpu", no_argument, 0, 'g'},
                 {"help", no_argument, 0, 'h'}
         };
-        c = getopt_long(argc, argv, "n:b:d:m:c:gh", long_options, &option_index);
+        c = getopt_long(argc, argv, "n:b:d:m:c:f:gh", long_options, &option_index);
         if (c == -1) break;
 
         switch (c) {
@@ -429,6 +362,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'c':
                 global_clustering_coefficient_target = std::stof(optarg);
+                break;
+            case 'f':
+                edge_list_filename = optarg;
                 break;
             case 'g':
                 gpu_flag = 1;
@@ -451,13 +387,14 @@ int main(int argc, char *argv[]) {
 
     if (number_of_nodes == -1 || max_degree_bound == -1 || average_degree_target == -1 ||
         max_clustering_coefficient_target == -1 || global_clustering_coefficient_target == -1) {
-        printf("Parameters are mandatory");
+        spd::get("logger")->info("Parameters are mandatory");
         exit(1);
     }
 
     setupLogger();
 
     setupEnvironment();
+    Py_Initialize();
 
     Parameters *parameters = new Parameters(number_of_nodes,
                                             max_degree_bound,
@@ -468,25 +405,23 @@ int main(int argc, char *argv[]) {
 
     spd::get("logger")->info("Environment setup");
     spd::get("logger")->info("Starting Python");
-    Py_Initialize();
-
-    std::ofstream outfile_timing;
-    outfile_timing.open("gpu_bench.csv");
-    outfile_timing << "nnodes;phase_one_seconds;phase_two_seconds \n";
 
     std::ofstream outfile_edgelist;
-    outfile_edgelist.open("edge_list.csv");
+    outfile_edgelist.open(edge_list_filename);
 
     if (gpu_flag == 1) {
-        singleBenchmarkGpu(outfile_timing, outfile_edgelist, parameters);
+        singleBenchmarkGpu(outfile_edgelist, parameters);
     } else {
-        singleBenchmarkSeq(outfile_timing, outfile_edgelist, parameters);
+        singleBenchmarkSeq(outfile_edgelist, parameters);
     }
 
-    outfile_timing.close();
     outfile_edgelist.close();
 
     Py_Finalize();
+
+    if (edge_list_filename == NULL) {
+        spd::get("logger")->info("You need set a filename with -f to save the graph as edge list \n");
+    }
 
     return 0;
 }
