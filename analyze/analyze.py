@@ -2,8 +2,9 @@ import csv
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import spearmanr
 from tabulate import tabulate
+from scipy.stats import spearmanr
+from sklearn import linear_model
 
 data = ['_get_num_edges', '_get_num_vertices', '_get_ccd', '_get_avg_deg', '_get_pseudo_diameter', '_get_assortativity',
         '_get_scalar_assortativity', '_get_density', '_get_min_deg', '_get_max_deg', '_get_max_vertex_betweenness',
@@ -34,6 +35,57 @@ def correlation_spearman(csv_file: str):
     print('Average degree distribution')
     avg_deg = [[parameters[i]] + list(spearmanr(arr[3], arr[i])) for i in range(4, arr.shape[0])]
     print(tabulate(avg_deg, headers=['parameter', 'rho', 'pval']))
+
+
+def learn_diameter(csv_file: str):
+    reg = linear_model.LinearRegression()
+    arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
+    y = np.vstack((arr[2], arr[3]))
+    x = np.vstack((arr[4])).reshape((len(arr[4]),))
+
+    reg.fit(x.reshape(-1, 1), y.T)
+
+    predict_size = 20
+    predicted = [reg.predict(x) for x in np.arange(predict_size)]
+    predicted = np.concatenate(predicted).T
+
+    # Plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(y[0], y[1], x)
+    ax.plot(predicted[0], predicted[1], np.arange(predict_size), color='r')
+
+    ax.set_xlabel('Clustering coefficient')
+    ax.set_ylabel('Average global degree')
+    ax.set_zlabel('Diameter')
+    plt.show()
+
+    return reg.coef_
+
+
+def learn_scalar_assortativity(csv_file: str):
+    reg = linear_model.LinearRegression()
+    arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
+    y = np.vstack((arr[2], arr[3]))
+    x = np.vstack((arr[6])).reshape((len(arr[6]),))
+
+    reg.fit(x.reshape(-1, 1), y.T)
+
+    predicted = [reg.predict(x) for x in np.arange(-0.5, 0.5, 0.001)]
+    predicted = np.concatenate(predicted).T
+
+    # Plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(y[0], y[1], x)
+    ax.plot(predicted[0], predicted[1], np.arange(-0.5, 0.5, 0.001), color='r')
+
+    ax.set_xlabel('Clustering coefficient')
+    ax.set_ylabel('Average global degree')
+    ax.set_zlabel('Scalar Assortativity')
+    plt.show()
+
+    return reg.coef_
 
 
 def plot_correlation(csv_file: str):

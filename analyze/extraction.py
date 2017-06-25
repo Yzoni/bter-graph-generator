@@ -2,14 +2,12 @@ import csv
 import glob
 import math
 from pathlib import Path
+import argparse
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from graph_tool.all import *
-from scipy.stats import spearmanr
-from sklearn import linear_model
-from tabulate import tabulate
 
 
 class ParameterExtraction:
@@ -21,7 +19,6 @@ class ParameterExtraction:
     def _iterate_edge_lists(self):
         if self.graphs_path.is_dir():
             for filename in glob.iglob(str(self.graphs_path) + '/**/*.edges', recursive=True):
-                print(filename)
                 yield filename
 
     def _get_num_edges(self, graph: Graph):
@@ -50,11 +47,12 @@ class ParameterExtraction:
 
     # Degree distribution log normal?
     def get_degree_sequence(self, graph: nx.Graph):
-        degree_sequence=sorted(nx.degree(G).values(),reverse=True)
+        degree_sequence = sorted(nx.degree(G).values(), reverse=True)
 
     """
     DEGREE
     """
+
     def _get_avg_deg(self, graph: Graph):
         return 2 * (graph.num_edges() / graph.num_vertices())
 
@@ -77,6 +75,7 @@ class ParameterExtraction:
     """
     VERTEX BETWEENNESS
     """
+
     def _get_max_vertex_betweenness(self, graph: Graph):
         vertex_betweenness, edge_betweenness = betweenness(graph)
         return max(vertex_betweenness.get_array())
@@ -96,6 +95,7 @@ class ParameterExtraction:
     """
     EDGE BETWEENNESS
     """
+
     def _get_max_edge_betweenness(self, graph: Graph):
         vertex_betweenness, edge_betweenness = betweenness(graph)
         return max(edge_betweenness.get_array())
@@ -115,16 +115,17 @@ class ParameterExtraction:
     """
     CLIQUE
     """
+
     def _get_clique_number(self, graph: nx.Graph):
         return nx.graph_clique_number(graph)
 
     def _get_number_of_cliques(self, graph: nx.Graph):
         return nx.graph_number_of_cliques(graph)
 
-
     """
     PLOT
     """
+
     def plot_data(self, csv_file: str):
         p = Path(csv_file)
         if p.exists():
@@ -139,7 +140,7 @@ class ParameterExtraction:
             plt.scatter(ccd, avd)
             plt.show()
 
-    def run(self):
+    def run(self, do_non_np=True):
         columns = [self._get_num_edges,
                    self._get_num_vertices,
                    self._get_ccd,
@@ -160,9 +161,12 @@ class ParameterExtraction:
                    self._get_std_edge_betweenness]
 
         columns_nx = [
-                    self._get_clique_number,
-                    self._get_number_of_cliques,
-                    self._get_average_shortest_path
+            self._get_clique_number,
+        ]
+
+        columns_nx_non_np = [
+            self._get_number_of_cliques,
+            self._get_average_shortest_path
         ]
 
         f = csv.writer(open(self.export_file, 'w'))
@@ -178,95 +182,31 @@ class ParameterExtraction:
             g = load_graph_from_csv(file, directed=False, csv_options=csv_options)
             gx = nx.read_edgelist(file, delimiter=csv_options['delimiter'], create_using=nx.Graph(), nodetype=int)
             if nx.is_connected(gx):
+                print('Did graph {}'.format(file))
                 column_values = [c(g) for c in columns]
                 column_values += [c(gx) for c in columns_nx]
+                if do_non_np:
+                    column_values += [c(gx) for c in columns_nx_non_np]
                 f.writerow(column_values)
+            else:
+                print('Graph was not connected, skipping ... {}'.format(file))
         f.close()
 
-def learn_diameter(csv_file: str):
-    reg = linear_model.LinearRegression()
-    arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
-    y = np.vstack((arr[2], arr[3]))
-    x = np.vstack((arr[4])).reshape((len(arr[4]),))
-
-    reg.fit(x.reshape(-1, 1), y.T)
-
-    predict_size = 20
-    predicted = [reg.predict(x) for x in np.arange(predict_size)]
-    predicted = np.concatenate(predicted).T
-
-    # Plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(y[0], y[1], x)
-    ax.plot(predicted[0], predicted[1], np.arange(predict_size), color='r')
-
-    ax.set_xlabel('Clustering coefficient')
-    ax.set_ylabel('Average global degree')
-    ax.set_zlabel('Diameter')
-    plt.show()
-
-    return reg.coef_
-
-def learn_scalar_assortativity(csv_file: str):
-    reg = linear_model.LinearRegression()
-    arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
-    y = np.vstack((arr[2], arr[3]))
-    x = np.vstack((arr[6])).reshape((len(arr[6]),))
-
-    reg.fit(x.reshape(-1, 1), y.T)
-
-    predicted = [reg.predict(x) for x in np.arange(-0.5, 0.5, 0.001)]
-    predicted = np.concatenate(predicted).T
-
-    # Plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(y[0], y[1], x)
-    ax.plot(predicted[0], predicted[1], np.arange(-0.5, 0.5, 0.001), color='r')
-
-    ax.set_xlabel('Clustering coefficient')
-    ax.set_ylabel('Average global degree')
-    ax.set_zlabel('Scalar Assortativity')
-    plt.show()
-
-    return reg.coef_
-
-def correlation_spearman(csv_file: str):
-    """
-    Generates a table of spearman correlations for each column of csv
-
-    :param csv_file: csv file name path
-    :return:
-    """
-    with open(csv_file) as f:
-        reader = csv.reader(f)
-        parameters = next(reader)
-
-    arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
-
-    print('Clustering coefficient')
-    cc = [[parameters[i]] + list(spearmanr(arr[2], arr[i])) for i in range(3, arr.shape[0])]
-    print(tabulate(cc, headers=['parameter', 'rho', 'pval']))
-
-    print('\n')
-
-    print('Average degree distribution')
-    avg_deg = [[parameters[i]] + list(spearmanr(arr[3], arr[i])) for i in range(4, arr.shape[0])]
-    print(tabulate(avg_deg, headers=['parameter', 'rho', 'pval']))
-
-def plot_correlation(csv_file: str):
-    arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
-
-    y = arr['_get_ccd']
-    x = arr['_get_density']
-
-    plt.scatter(x, y)
-    plt.show()
 
 if __name__ == '__main__':
-    p = ParameterExtraction('data', 'parameters.csv')
-    p.run()
-    # learn_diameter('parameters.csv')
-    # learn_scalar_assortativity('parameters.csv')
-    correlation_spearman('parameters.csv')
+    parser = argparse.ArgumentParser(description='Extraction of diversity of graph properties')
+    parser.add_argument('data_input', metavar='I', type=str,
+                        help='Input data directory')
+    parser.add_argument('data_output', metavar='O', type=str,
+                        help='Output CSV file')
+    parser.add_argument('-np',
+                        help='Do graph properties algorithm that are not in NP')
+
+    args = parser.parse_args()
+
+    p = ParameterExtraction(args.data_input, args.data_output)
+
+    if args.np:
+        p.run(do_non_np=True)
+    else:
+        p.run(do_non_np=False)
