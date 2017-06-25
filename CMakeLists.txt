@@ -4,7 +4,13 @@ set(CMAKE_CXX_COMPILER "g++")
 add_definitions(-std=c++0x)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++0x")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -arch=sm_61")
+
+# 5.2 compatibility for Titan X
+# 6.1 compatibility for GTX 1070
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11
+--generate-code arch=compute_52,code=sm_52
+--generate-code arch=compute_61,code=sm_61")
+
 
 project(bter_project)
 
