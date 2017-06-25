@@ -207,6 +207,8 @@ if __name__ == '__main__':
     p = ParameterExtraction(args.data_input, args.data_output)
 
     if args.np:
+        print('NP true')
         p.run(do_non_np=True)
     else:
+        print('NP false')
         p.run(do_non_np=False)

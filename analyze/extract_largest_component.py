@@ -39,5 +39,5 @@ if __name__ == '__main__':
         gx = extract_largest_component(edge_list)
         if not Path(args.data_output).exists():
             out_path.mkdir()
-        nx.write_edgelist(gx, str(out_path / Path(str(file_name.stem) + '.' + str(file_name.suffix))),
+        nx.write_edgelist(gx, str(out_path / Path(str(file_name.stem) + str(file_name.suffix))),
                           delimiter=';', data=False)
