@@ -105,7 +105,7 @@ def poly_fit_density(csv_file: str):
     plt.xlabel(x_label[5:])
     plt.show()
 
-    return xp
+    return yp
 
 def poly_fit_shortest_path(csv_file: str):
     arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
@@ -124,7 +124,7 @@ def poly_fit_shortest_path(csv_file: str):
     plt.xlabel(x_label[5:])
     plt.show()
 
-    return xp
+    return yp
 
 
 def get_outliers(csv_file: str, column: str, cutoff: int):
