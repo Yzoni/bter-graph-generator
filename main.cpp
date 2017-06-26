@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <getopt.h>
+#include <math.h>
 
 #include "spdlog/spdlog.h"
 #include "BterPhasesGpu.h"
@@ -318,7 +319,26 @@ void singleBenchmarkSeq(std::ofstream &outfile_edges, Parameters *parameters) {
     delete[] phase_two_j;
 }
 
+double get_gcc_from_density(float density) {
+    if (density >= 0 && density <= 1.1) {
+        return -0.2912 * pow(density, 2) + 0.7624 * density + 0.322;
+    } else {
+        spd::get("logger")->info("Density value needs to be between 0 and 1.1");
+        exit(1);
+    }
+}
+
+double get_gcc_from_shortest_path(float shortest_path) {
+    if (shortest_path >= 1.0 && shortest_path <= 2.5) {
+        return 0.2323 * pow(shortest_path, 2) - 1.187 * shortest_path + 1.939;
+    } else {
+        spd::get("logger")->info("Shortest path value needs to be between 1 and 2.5");
+        exit(1);
+    }
+}
+
 int main(int argc, char *argv[]) {
+    setupLogger();
 
     int gpu_flag = 0;
 
@@ -327,9 +347,11 @@ int main(int argc, char *argv[]) {
     int average_degree_target = -1;
     float max_clustering_coefficient_target = -1;
     float global_clustering_coefficient_target = -1;
+    double density = -1;
+    double shortest_path = -1;
     char *edge_list_filename = NULL;
 
-    int c;
+    int choice;
     int option_count = 7;
     while (1) {
 
@@ -340,14 +362,16 @@ int main(int argc, char *argv[]) {
                 {"average_degree_target",                required_argument, 0, 'd'},
                 {"max_clustering_coefficient_target",    required_argument, 0, 'm'},
                 {"global_clustering_coefficient_target", required_argument, 0, 'c'},
-                {"file", required_argument, 0, 'f'},
-                {"gpu", no_argument, 0, 'g'},
-                {"help", no_argument, 0, 'h'}
+                {"density",                              required_argument, 0, 'e'},
+                {"shortest_path",                        required_argument, 0, 's'},
+                {"file",                                 required_argument, 0, 'f'},
+                {"gpu",                                  no_argument,       0, 'g'},
+                {"help",                                 no_argument,       0, 'h'}
         };
-        c = getopt_long(argc, argv, "n:b:d:m:c:f:gh", long_options, &option_index);
-        if (c == -1) break;
+        choice = getopt_long(argc, argv, "n:b:d:m:c:f:e:s:gh", long_options, &option_index);
+        if (choice == -1) break;
 
-        switch (c) {
+        switch (choice) {
             case 'n':
                 number_of_nodes = atoi(optarg);
                 break;
@@ -363,6 +387,12 @@ int main(int argc, char *argv[]) {
             case 'c':
                 global_clustering_coefficient_target = std::stof(optarg);
                 break;
+            case 'e':
+                density = get_gcc_from_density(std::stof(optarg));
+                break;
+            case 's':
+                shortest_path = get_gcc_from_shortest_path(std::stof(optarg));
+                break;
             case 'f':
                 edge_list_filename = optarg;
                 break;
@@ -370,14 +400,14 @@ int main(int argc, char *argv[]) {
                 gpu_flag = 1;
                 break;
             case 'h':
-                fprintf(stdout,"Valid options are: \n");
+                fprintf(stdout, "Valid options are: \n");
                 for (int i = 0; i < option_count; ++i) {
                     fprintf(stdout, "-%c, --%s \n", long_options[i].val, long_options[i].name);
                 }
             case '?':
-               if (isprint(optopt)) {
-                   fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-               }
+                if (isprint(optopt)) {
+                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                }
 
                 return 1;
             default:
@@ -385,13 +415,19 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Check if all mandatory parameters are set
     if (number_of_nodes == -1 || max_degree_bound == -1 || average_degree_target == -1 ||
-        max_clustering_coefficient_target == -1 || global_clustering_coefficient_target == -1) {
+        max_clustering_coefficient_target == -1) {
         spd::get("logger")->info("Parameters are mandatory");
         exit(1);
     }
 
-    setupLogger();
+    // Check if there are no conflicting parameters
+    int conflict = ((global_clustering_coefficient_target != -1) + (density != -1) + (shortest_path != -1));
+    if (conflict != 1) {
+        spd::get("logger")->info("Parameter conflict or missing global clustering coefficient");
+        exit(1);
+    }
 
     setupEnvironment();
     Py_Initialize();
