@@ -186,5 +186,5 @@ if __name__ == '__main__':
     # print('Density function: {}'.format(poly_fit_density('parameters_proper.csv')))
     # print('Shortest path function: {}'.format(poly_fit_shortest_path('parameters_proper.csv')))
     # print(get_outliers('parameters_proper.csv', '_get_ccd', 0.1))
-    check_parameters_from_real_graph_density('parameters_benchmark_density.csv')
-    check_parameters_from_real_graph_shortest('parameters_benchmark_shortest_path.csv')
+    check_parameters_from_real_graph_density('data_syn/density_generated_graphs.csv')
+    check_parameters_from_real_graph_shortest('data_syn/shortest_path_generated_graphs.csv')
