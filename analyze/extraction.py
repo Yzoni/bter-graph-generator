@@ -27,7 +27,7 @@ class ParameterExtraction:
     def _get_num_vertices(self, graph: Graph):
         return graph.num_vertices()
 
-    def _get_ccd(self, graph: Graph):
+    def _get_global_clustering_coefficient(self, graph: Graph):
         return global_clustering(graph)[0]
 
     def _get_pseudo_diameter(self, graph: Graph):
@@ -53,7 +53,7 @@ class ParameterExtraction:
     DEGREE
     """
 
-    def _get_avg_deg(self, graph: Graph):
+    def _get_avg_degree(self, graph: Graph):
         return 2 * (graph.num_edges() / graph.num_vertices())
 
     def _get_min_deg(self, graph: Graph):
@@ -143,8 +143,8 @@ class ParameterExtraction:
     def run(self, do_non_np=True):
         columns = [self._get_num_edges,
                    self._get_num_vertices,
-                   self._get_ccd,
-                   self._get_avg_deg,
+                   self._get_global_clustering_coefficient,
+                   self._get_avg_degree,
                    self._get_pseudo_diameter,
                    self._get_assortativity,
                    self._get_scalar_assortativity,
