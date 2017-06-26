@@ -23,6 +23,18 @@ def extract_largest_component(graph: nx.Graph) -> nx.Graph:
     return max(nx.connected_component_subgraphs(graph), key=len)
 
 
+def write_largest_component(data_input: str, data_output: str):
+    input_path = Path(data_input)
+    out_path = Path(data_output)
+    for edge_list, file_name in iterate_edge_lists(input_path):
+        print("Getting largest component: {}".format(file_name))
+        gx = extract_largest_component(edge_list)
+        if not Path(data_output).exists():
+            out_path.mkdir()
+        nx.write_edgelist(gx, str(out_path / Path(str(file_name.stem) + str(file_name.suffix))),
+                          delimiter=';', data=False)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extraction of diversity of graph properties')
     parser.add_argument('data_input', metavar='I', type=str,
@@ -32,12 +44,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    input_path = Path(args.data_input)
-    out_path = Path(args.data_output)
-    for edge_list, file_name in iterate_edge_lists(input_path):
-        print(file_name)
-        gx = extract_largest_component(edge_list)
-        if not Path(args.data_output).exists():
-            out_path.mkdir()
-        nx.write_edgelist(gx, str(out_path / Path(str(file_name.stem) + str(file_name.suffix))),
-                          delimiter=';', data=False)
+    write_largest_component(args.data_input, args.data_output)

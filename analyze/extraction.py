@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from graph_tool.all import *
-
+from extract_largest_component import write_largest_component
 
 class ParameterExtraction:
     def __init__(self, graphs_path: str, export_file: str) -> None:
@@ -172,7 +172,6 @@ class ParameterExtraction:
         f = csv.writer(open(self.export_file, 'w'))
         f.writerow(map(lambda x: x.__name__, columns + columns_nx))
         for file in self._iterate_edge_lists():
-
             # Get data_real properties
             with open(file, 'r') as c:
                 dialect = csv.Sniffer().sniff(c.read(1024))
@@ -199,11 +198,18 @@ if __name__ == '__main__':
     parser.add_argument('data_output', metavar='O', type=str,
                         help='Output CSV file')
     parser.add_argument('-np',
-                        help='Do graph properties algorithm that are not in NP')
-
+                        help='Do graph properties algorithm that are not in NP', action='store_true')
+    parser.add_argument('-fix',
+                        help='If not connected, extract largest component', action='store_true')
     args = parser.parse_args()
 
-    p = ParameterExtraction(args.data_input, args.data_output)
+    if args.fix:
+        print('Fixing graphs...')
+        write_largest_component(args.data_input, args.data_output + '_fixed')
+        p = ParameterExtraction(args.data_output + '_fixed', args.data_output)
+    else:
+        print('Do not fix graphs')
+        p = ParameterExtraction(args.data_input, args.data_output)
 
     if args.np:
         print('NP true')
