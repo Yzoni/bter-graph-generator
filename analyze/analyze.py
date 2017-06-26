@@ -37,6 +37,19 @@ def correlation_spearman(csv_file: str):
     print(tabulate(avg_deg, headers=['parameter', 'rho', 'pval']))
 
 
+def check_parameters_from_real_graph_density(csv_file: str):
+    arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
+    print('Density from real graph')
+    print(arr['_get_global_clustering_coefficient'])
+    print(arr['_get_density'])
+
+
+def check_parameters_from_real_graph_shortest(csv_file: str):
+    arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
+    print('Shortest path from real graph')
+    print(arr['_get_global_clustering_coefficient'])
+    print(arr['_get_average_shortest_path'])
+
 def learn_diameter(csv_file: str):
     reg = linear_model.LinearRegression()
     arr = np.genfromtxt(csv_file, delimiter=',', skip_header=True).T
@@ -170,6 +183,8 @@ def plot_correlation(csv_file: str):
 if __name__ == '__main__':
     # correlation_spearman('parameters_proper.csv')
     # plot_correlation('parameters_proper.csv')
-    print('Density function: {}'.format(poly_fit_density('parameters_proper.csv')))
-    print('Shortest path function: {}'.format(poly_fit_shortest_path('parameters_proper.csv')))
+    # print('Density function: {}'.format(poly_fit_density('parameters_proper.csv')))
+    # print('Shortest path function: {}'.format(poly_fit_shortest_path('parameters_proper.csv')))
     # print(get_outliers('parameters_proper.csv', '_get_ccd', 0.1))
+    check_parameters_from_real_graph_density('parameters_benchmark_density.csv')
+    check_parameters_from_real_graph_shortest('parameters_benchmark_shortest_path.csv')

@@ -26,7 +26,7 @@ def extract_largest_component(graph: nx.Graph) -> nx.Graph:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extraction of diversity of graph properties')
     parser.add_argument('data_input', metavar='I', type=str,
-                        help='Input data directory containing edge lists')
+                        help='Input data_real directory containing edge lists')
     parser.add_argument('data_output', metavar='O', type=str,
                         help='Output directory for fixed edges lists')
 

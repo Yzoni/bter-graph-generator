@@ -19,10 +19,22 @@ void setupLogger() {
 }
 
 void setupEnvironment() {
-    char *dirname = get_current_dir_name();
-    std::string dir = std::string(dirname);
-    const char *path = dir.c_str();
-
+    std::string spath = "";
+    pid_t pid = getpid();
+    char buf[20] = {0};
+    sprintf(buf, "%d", pid);
+    std::string _link = "/proc/";
+    _link.append(buf);
+    _link.append("/exe");
+    char proc[512];
+    int ch = readlink(_link.c_str(), proc, 512);
+    if (ch != -1) {
+        proc[ch] = 0;
+        spath = proc;
+        std::string::size_type t = spath.find_last_of("/");
+        spath = spath.substr(0, t);
+    }
+    const char *path = spath.c_str();
     setenv("PYTHONPATH", path, 1);
     spd::get("logger")->info("Python path set to {}", path);
 }
@@ -319,18 +331,18 @@ void singleBenchmarkSeq(std::ofstream &outfile_edges, Parameters *parameters) {
     delete[] phase_two_j;
 }
 
-double get_gcc_from_density(float density) {
+float get_gcc_from_density(float density) {
     if (density >= 0 && density <= 1.1) {
-        return -0.2912 * pow(density, 2) + 0.7624 * density + 0.322;
+        return (float) (-0.2912 * pow(density, 2) + 0.7624 * density + 0.322);
     } else {
         spd::get("logger")->info("Density value needs to be between 0 and 1.1");
         exit(1);
     }
 }
 
-double get_gcc_from_shortest_path(float shortest_path) {
+float get_gcc_from_shortest_path(float shortest_path) {
     if (shortest_path >= 1.0 && shortest_path <= 2.5) {
-        return 0.2323 * pow(shortest_path, 2) - 1.187 * shortest_path + 1.939;
+        return (float) (0.2323 * pow(shortest_path, 2) - 1.187 * shortest_path + 1.939);
     } else {
         spd::get("logger")->info("Shortest path value needs to be between 1 and 2.5");
         exit(1);
@@ -347,8 +359,8 @@ int main(int argc, char *argv[]) {
     int average_degree_target = -1;
     float max_clustering_coefficient_target = -1;
     float global_clustering_coefficient_target = -1;
-    double density = -1;
-    double shortest_path = -1;
+    float density = -1;
+    float shortest_path = -1;
     char *edge_list_filename = NULL;
 
     int choice;
@@ -429,6 +441,14 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    if (density != -1) {
+        global_clustering_coefficient_target = density;
+        spd::get("logger")->info("Setting global clustering coefficient to {}", global_clustering_coefficient_target);
+    } else if (shortest_path != -1) {
+        global_clustering_coefficient_target = shortest_path;
+        spd::get("logger")->info("Setting global clustering coefficient to {}", global_clustering_coefficient_target);
+    }
+
     setupEnvironment();
     Py_Initialize();
 
@@ -456,7 +476,7 @@ int main(int argc, char *argv[]) {
     Py_Finalize();
 
     if (edge_list_filename == NULL) {
-        spd::get("logger")->info("You need set a filename with -f to save the graph as edge list \n");
+        spd::get("logger")->info("You need to set a filename with -f to save the graph as edge list \n");
     }
 
     return 0;

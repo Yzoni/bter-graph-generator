@@ -161,19 +161,19 @@ class ParameterExtraction:
                    self._get_std_edge_betweenness]
 
         columns_nx = [
-            self._get_clique_number,
+            self._get_average_shortest_path
         ]
 
         columns_nx_non_np = [
+            self._get_clique_number,
             self._get_number_of_cliques,
-            self._get_average_shortest_path
         ]
 
         f = csv.writer(open(self.export_file, 'w'))
         f.writerow(map(lambda x: x.__name__, columns + columns_nx))
         for file in self._iterate_edge_lists():
 
-            # Get data properties
+            # Get data_real properties
             with open(file, 'r') as c:
                 dialect = csv.Sniffer().sniff(c.read(1024))
                 csv_options = {'delimiter': dialect.delimiter, 'quotechar': dialect.quotechar}
@@ -190,13 +190,12 @@ class ParameterExtraction:
                 f.writerow(column_values)
             else:
                 print('Graph was not connected, skipping ... {}'.format(file))
-        f.close()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extraction of diversity of graph properties')
     parser.add_argument('data_input', metavar='I', type=str,
-                        help='Input data directory')
+                        help='Input data_real directory')
     parser.add_argument('data_output', metavar='O', type=str,
                         help='Output CSV file')
     parser.add_argument('-np',
