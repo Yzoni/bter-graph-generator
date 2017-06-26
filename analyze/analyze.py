@@ -91,26 +91,40 @@ def learn_scalar_assortativity(csv_file: str):
 def poly_fit_density(csv_file: str):
     arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
 
-    y = arr['_get_global_clustering_coefficient']
-    x = arr['_get_density']
-    xp = np.poly1d(np.polyfit(x, y, 2))
-    yp = np.linspace(0, 1, 20)
+    y_label = '_get_global_clustering_coefficient'
+    x_label = '_get_density'
+
+    y = arr[y_label]
+    x = arr[x_label]
+    xp = np.poly1d(np.polyfit(y, x, 2))
+    yp = np.linspace(0.25, 1, 10)
 
     plt.scatter(y, x)
-    plt.plot(xp(yp), yp, '-', color='r')
+    plt.plot(yp, xp(yp), '-', color='r')
+    plt.ylabel(x_label[5:])
+    plt.xlabel(y_label[5:])
     plt.show()
+
+    return xp
 
 def poly_fit_shortest_path(csv_file: str):
     arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
 
-    y = arr['_get_global_clustering_coefficient']
-    x = arr['_get_average_shortest_path']
-    xp = np.poly1d(np.polyfit(x, y, 2))
-    yp = np.linspace(1, 2.6, 20)
+    y_label = '_get_global_clustering_coefficient'
+    x_label = '_get_average_shortest_path'
+
+    y = arr[y_label]
+    x = arr[x_label]
+    xp = np.poly1d(np.polyfit(y, x, 2))
+    yp = np.linspace(0.25, 1, 10)
 
     plt.scatter(y, x)
-    plt.plot(xp(yp), yp, '-', color='r')
+    plt.plot(yp, xp(yp), '-', color='r')
+    plt.ylabel(x_label[5:])
+    plt.xlabel(y_label[5:])
     plt.show()
+
+    return xp
 
 
 def get_outliers(csv_file: str, column: str, cutoff: int):
@@ -155,7 +169,7 @@ def plot_correlation(csv_file: str):
 
 if __name__ == '__main__':
     # correlation_spearman('parameters_proper.csv')
-    plot_correlation('parameters_proper.csv')
-    # poly_fit_density('parameters_proper.csv')
-    # poly_fit_shortest_path('parameters_proper.csv')
+    # plot_correlation('parameters_proper.csv')
+    print('Density function: {}'.format(poly_fit_density('parameters_proper.csv')))
+    print('Shortest path function: {}'.format(poly_fit_shortest_path('parameters_proper.csv')))
     # print(get_outliers('parameters_proper.csv', '_get_ccd', 0.1))
