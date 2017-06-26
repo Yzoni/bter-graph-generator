@@ -122,29 +122,29 @@ def plot_correlation(csv_file: str):
     arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
 
     for idx, column in enumerate(data):
-        y = arr['_get_ccd']
-        x = arr[column]
+        x = arr['_get_ccd']
+        y = arr[column]
 
         plt.figure(1)
         plt.subplot(5, 4, idx + 1)
-        plt.title(column)
+        plt.ylabel(column)
         plt.scatter(x, y)
     plt.show()
 
     for idx, column in enumerate(data):
-        y = arr['_get_avg_deg']
-        x = arr[column]
+        x = arr['_get_avg_deg']
+        y = arr[column]
 
         plt.figure(1)
         plt.subplot(5, 4, idx + 1)
-        plt.title(column)
+        plt.ylabel(column)
         plt.scatter(x, y)
     plt.show()
 
 
 if __name__ == '__main__':
     # correlation_spearman('parameters_proper.csv')
-    # plot_correlation('parameters_proper.csv')
-    poly_fit_density('parameters_proper.csv')
-    poly_fit_shortest_path('parameters_proper.csv')
+    plot_correlation('parameters_proper.csv')
+    # poly_fit_density('parameters_proper.csv')
+    # poly_fit_shortest_path('parameters_proper.csv')
     # print(get_outliers('parameters_proper.csv', '_get_ccd', 0.1))
