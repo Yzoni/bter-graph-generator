@@ -96,13 +96,13 @@ def poly_fit_density(csv_file: str):
 
     y = arr[y_label]
     x = arr[x_label]
-    xp = np.poly1d(np.polyfit(y, x, 2))
-    yp = np.linspace(0.25, 1, 10)
+    yp = np.poly1d(np.polyfit(x, y, 2))
+    xp = np.linspace(0, 1.1, 10)
 
-    plt.scatter(y, x)
-    plt.plot(yp, xp(yp), '-', color='r')
-    plt.ylabel(x_label[5:])
-    plt.xlabel(y_label[5:])
+    plt.scatter(x, y)
+    plt.plot(xp, yp(xp), '-', color='r')
+    plt.ylabel(y_label[5:])
+    plt.xlabel(x_label[5:])
     plt.show()
 
     return xp
@@ -115,13 +115,13 @@ def poly_fit_shortest_path(csv_file: str):
 
     y = arr[y_label]
     x = arr[x_label]
-    xp = np.poly1d(np.polyfit(y, x, 2))
-    yp = np.linspace(0.25, 1, 10)
+    yp = np.poly1d(np.polyfit(x, y, 2))
+    xp = np.linspace(1, 2.5, 10)
 
-    plt.scatter(y, x)
-    plt.plot(yp, xp(yp), '-', color='r')
-    plt.ylabel(x_label[5:])
-    plt.xlabel(y_label[5:])
+    plt.scatter(x, y)
+    plt.plot(xp, yp(xp), '-', color='r')
+    plt.ylabel(y_label[5:])
+    plt.xlabel(x_label[5:])
     plt.show()
 
     return xp
