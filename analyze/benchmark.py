@@ -14,7 +14,7 @@ def generate_analyze_graphs():
     for db in range_max_degree_bound:
         for ad in range_average_degree:
             for ccf in range_clustering_coefficient:
-                graph_out_dir = Path('generated_graphs')
+                graph_out_dir = Path('data_syn/brute_force_generated/generated_graphs_' + str(db) + "_" + str(ad))
                 if not graph_out_dir.exists():
                     graph_out_dir.mkdir()
 
@@ -88,4 +88,5 @@ def test_graphs_from_real_graphs():
 
 
 if __name__ == '__main__':
-    test_graphs_from_real_graphs()
+    generate_analyze_graphs()
+    # test_graphs_from_real_graphs()

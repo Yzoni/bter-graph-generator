@@ -6,7 +6,8 @@ from tabulate import tabulate
 from scipy.stats import spearmanr
 from sklearn import linear_model
 
-data = ['_get_num_edges', '_get_num_vertices', '_get_global_clustering_coefficient', '_get_avg_degree', '_get_pseudo_diameter', '_get_assortativity',
+data = ['_get_num_edges', '_get_num_vertices', '_get_global_clustering_coefficient', '_get_avg_degree',
+        '_get_pseudo_diameter', '_get_assortativity',
         '_get_scalar_assortativity', '_get_density', '_get_min_deg', '_get_max_deg', '_get_max_vertex_betweenness',
         '_get_min_vertex_betweenness', '_get_mean_vertex_betweenness', '_get_std_vertex_betweenness',
         '_get_max_edge_betweenness', '_get_min_edge_betweenness', '_get_mean_edge_betweenness',
@@ -42,6 +43,7 @@ def check_parameters_from_real_graph_density(csv_file: str):
     print('Density from real graph')
     print(arr['_get_global_clustering_coefficient'])
     print(arr['_get_density'])
+    return arr['_get_global_clustering_coefficient'], arr['_get_density']
 
 
 def check_parameters_from_real_graph_shortest(csv_file: str):
@@ -49,6 +51,8 @@ def check_parameters_from_real_graph_shortest(csv_file: str):
     print('Shortest path from real graph')
     print(arr['_get_global_clustering_coefficient'])
     print(arr['_get_average_shortest_path'])
+    return arr['_get_global_clustering_coefficient'], arr['_get_average_shortest_path']
+
 
 def learn_diameter(csv_file: str):
     reg = linear_model.LinearRegression()
@@ -101,7 +105,28 @@ def learn_scalar_assortativity(csv_file: str):
     return reg.coef_
 
 
-def poly_fit_density(csv_file: str):
+def plot_brute_force_generated(csv_file: str):
+    arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
+
+    count = 0
+    for column in data:
+        if column is '_get_global_clustering_coefficient':
+            continue
+        count += 1
+        x = arr['_get_global_clustering_coefficient']
+        y = arr[column]
+
+        plt.figure(1)
+        plt.subplot(6, 3, count)
+        plt.ylabel(column[5:])
+        plt.scatter(x, y)
+    plt.tight_layout()
+    plt.show()
+
+    return 0
+
+
+def poly_fit_density(csv_file: str, real_graph=tuple(), xp=np.linspace(0, 1.1, 10)):
     arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
 
     y_label = '_get_global_clustering_coefficient'
@@ -110,17 +135,23 @@ def poly_fit_density(csv_file: str):
     y = arr[y_label]
     x = arr[x_label]
     yp = np.poly1d(np.polyfit(x, y, 2))
-    xp = np.linspace(0, 1.1, 10)
 
     plt.scatter(x, y)
     plt.plot(xp, yp(xp), '-', color='r')
+
+    if len(real_graph) is not 0:
+        real_x = real_graph[0]
+        real_y = real_graph[1]
+        plt.plot(real_x, real_y, color='g')
+
     plt.ylabel(y_label[5:])
     plt.xlabel(x_label[5:])
     plt.show()
 
     return yp
 
-def poly_fit_shortest_path(csv_file: str):
+
+def poly_fit_shortest_path(csv_file: str, real_graph=tuple(), xp=np.linspace(1, 2.5, 10)):
     arr = np.genfromtxt(csv_file, delimiter=',', names=True).T
 
     y_label = '_get_global_clustering_coefficient'
@@ -129,10 +160,15 @@ def poly_fit_shortest_path(csv_file: str):
     y = arr[y_label]
     x = arr[x_label]
     yp = np.poly1d(np.polyfit(x, y, 2))
-    xp = np.linspace(1, 2.5, 10)
 
     plt.scatter(x, y)
     plt.plot(xp, yp(xp), '-', color='r')
+
+    if len(real_graph) is not 0:
+        real_x = real_graph[0]
+        real_y = real_graph[1]
+        plt.plot(real_x, real_y, color='g')
+
     plt.ylabel(y_label[5:])
     plt.xlabel(x_label[5:])
     plt.show()
@@ -186,5 +222,14 @@ if __name__ == '__main__':
     # print('Density function: {}'.format(poly_fit_density('parameters_proper.csv')))
     # print('Shortest path function: {}'.format(poly_fit_shortest_path('parameters_proper.csv')))
     # print(get_outliers('parameters_proper.csv', '_get_ccd', 0.1))
-    check_parameters_from_real_graph_density('data_syn/density_generated_graphs.csv')
-    check_parameters_from_real_graph_shortest('data_syn/shortest_path_generated_graphs.csv')
+    # clustering, shortest = check_parameters_from_real_graph_density('data_syn/density_generated_graphs.csv')
+    # poly_fit_density('parameters_proper.csv', (clustering, shortest))
+
+    # clustering, shortest = check_parameters_from_real_graph_shortest('data_syn/shortest_path_generated_graphs.csv')
+    # poly_fit_shortest_path('parameters_proper.csv', (clustering, shortest))
+
+    # Brute force
+    # plot_brute_force_generated('data_syn/brute_force_generated_graphs.csv')
+    clustering, shortest = check_parameters_from_real_graph_shortest('data_syn/brute_force_generated_graphs.csv')
+    poly_fit_shortest_path('data_syn/brute_force_generated_graphs.csv', tuple(),
+                           xp=np.linspace(2.8, 3.1, 10))
