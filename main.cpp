@@ -478,7 +478,7 @@ int main(int argc, char *argv[]) {
 
     end = std::chrono::system_clock::now();
     elapsed_seconds = end - start;
-    spd::get("logger")->info("Total run time", elapsed_seconds.count());
+    spd::get("logger")->info("Total run time: {}", elapsed_seconds.count());
 
     outfile_edgelist.close();
 
