@@ -43,6 +43,11 @@ namespace bter {
         cuda_wrapper_rand_array(nsamples, r);
 
         // Assign uniform random values to bins
+        std::chrono::time_point<std::chrono::system_clock> start, end;
+        std::chrono::duration<double> elapsed_seconds;
+        start = std::chrono::system_clock::now();
+        spd::get("logger")->info("Start randomSample() assign random values to bins");
+
         double ru;
         for (int i = 0; i < nsamples; ++i) {
             ru = r[i];
@@ -52,6 +57,9 @@ namespace bter {
                 }
             }
         }
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        spd::get("logger")->info("Finished randomSample() assign random values to bins: {}", elapsed_seconds.count());
 
         delete[] r;
     }
