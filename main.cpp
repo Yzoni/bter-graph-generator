@@ -457,8 +457,6 @@ int main(int argc, char *argv[]) {
     std::chrono::duration<double> elapsed_seconds;
     start = std::chrono::system_clock::now();
 
-    BterPhasesSeq bterPhasesSeq(&bterSetupResult, dmax, nd, cd);
-
     Parameters *parameters = new Parameters(number_of_nodes,
                                             max_degree_bound,
                                             average_degree_target,
