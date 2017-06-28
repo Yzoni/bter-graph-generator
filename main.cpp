@@ -452,6 +452,13 @@ int main(int argc, char *argv[]) {
     setupEnvironment();
     Py_Initialize();
 
+    // Setup timer
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    std::chrono::duration<double> elapsed_seconds;
+    start = std::chrono::system_clock::now();
+
+    BterPhasesSeq bterPhasesSeq(&bterSetupResult, dmax, nd, cd);
+
     Parameters *parameters = new Parameters(number_of_nodes,
                                             max_degree_bound,
                                             average_degree_target,
@@ -470,6 +477,10 @@ int main(int argc, char *argv[]) {
     } else {
         singleBenchmarkSeq(outfile_edgelist, parameters);
     }
+
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    spd::get("logger")->info("Total run time", elapsed_seconds.count());
 
     outfile_edgelist.close();
 
