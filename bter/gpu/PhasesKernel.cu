@@ -7,9 +7,7 @@
 __global__ void
 setup_random_kernel(curandState *state, int length, int offset) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < length) {
-        curand_init((unsigned long long) clock(), idx, 0, &state[idx]);
-    }
+    curand_init((unsigned long long) clock(), idx, 0, &state[idx]);
 }
 
 __global__ void
