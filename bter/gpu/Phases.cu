@@ -83,23 +83,21 @@ void cuda_wrapper_phase_one(int *i, int *j,
 
     int blocksize = 512;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
+    cuda_setup_random_kernel(length, devStates);
 
     // Shift
-    cuda_setup_random_kernel(length, devStates);
     phase_one_shift << < nblock, blocksize >> >
                                  (cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
     // i
-    cuda_setup_random_kernel(length, devStates);
     phase_one_i << < nblock, blocksize >> >
                              (cuda_i, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
     // j
-    cuda_setup_random_kernel(length, devStates);
     phase_one_j << < nblock, blocksize >> >
                              (cuda_i, cuda_j, cuda_block_b, cuda_block_i, cuda_block_n, cuda_shift, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
@@ -161,18 +159,16 @@ void cuda_wrapper_phase_two(int *phase_two,
 
     int blocksize = 512;
     int nblock = length / blocksize + (length % blocksize == 0 ? 0 : 1);
-
     cuda_setup_random_kernel(length, devStates);
+
     phase_two_fill << < nblock, blocksize >> > (cuda_shift_fill, cuda_sz_fill, cuda_fill, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    cuda_setup_random_kernel(length, devStates);
     phase_two_bulk << < nblock, blocksize >> > (cuda_shift_bulk, cuda_sz_bulk, cuda_bulk, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    cuda_setup_random_kernel(length, devStates);
     phase_two_d << < nblock, blocksize >> > (cuda_fill, cuda_bulk, cuda_phase_two, cuda_rd_fill, devStates, length);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());

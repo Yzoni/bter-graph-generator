@@ -17,7 +17,6 @@ get_random_array(curandState *state, int length, double *out_array) {
     if (idx < length) {
         curandState localState = state[idx];
         out_array[idx] = curand_uniform_double(&localState);
-        state[idx] = localState;
     }
 }
 
@@ -30,8 +29,10 @@ phase_one_shift(double *block_b, double *block_i, double *block_n, int *shift, c
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     // Compute block and compute its offset
     if (idx < length) {
+        curandState localState = state[idx];
         shift[idx] = (int) __double2int_rn(
-                block_i[idx] + __double2int_rd(curand_uniform(&state[idx]) * block_b[idx]) * block_n[idx]);
+                block_i[idx] + __double2int_rd(curand_uniform(&localState) * block_b[idx]) * block_n[idx]);
+        state[idx] = localState;
     }
 }
 
@@ -40,7 +41,9 @@ phase_one_i(int *i, double *block_b, double *block_i, double *block_n, int *shif
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     // Choose first node
     if (idx < length) {
-        i[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * block_n[idx]) + shift[idx]);
+        curandState localState = state[idx];
+        i[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&localState) * block_n[idx]) + shift[idx]);
+        state[idx] = localState;
     }
 }
 
@@ -49,14 +52,17 @@ phase_one_j(int *i, int *j, double *block_b, double *block_i, double *block_n, i
             curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
+        curandState localState = state[idx];
+
         // Choose second node
         // "Without replacement"
-        j[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&state[idx]) * (block_n[idx] - 1)) + shift[idx]);
+        j[idx] = (int) __double2int_rn(__double2int_rd(curand_uniform(&localState) * (block_n[idx] - 1)) + shift[idx]);
 
         // Remove loops
         if (j[idx] >= i[idx]) {
             ++j[idx];
         }
+        state[idx] = localState;
     }
 }
 
@@ -69,8 +75,10 @@ phase_two_fill(double *phase_two_shift_fill, double *phase_two_sz_fill, double *
                curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
+        curandState localState = state[idx];
         phase_two_fill[idx] =
-                phase_two_shift_fill[idx] + __double2int_rd(curand_uniform(&state[idx]) * phase_two_sz_fill[idx]);
+                phase_two_shift_fill[idx] + __double2int_rd(curand_uniform(&localState) * phase_two_sz_fill[idx]);
+        state[idx] = localState;
     }
 }
 
@@ -79,8 +87,10 @@ phase_two_bulk(double *phase_two_shift_bulk, double *phase_two_sz_bulk, double *
                curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
+        curandState localState = state[idx];
         phase_two_bulk[idx] =
-                phase_two_shift_bulk[idx] + __double2int_rd(curand_uniform(&state[idx]) * phase_two_sz_bulk[idx]);
+                phase_two_shift_bulk[idx] + __double2int_rd(curand_uniform(&localState) * phase_two_sz_bulk[idx]);
+        state[idx] = localState;
     }
 }
 
@@ -89,10 +99,12 @@ phase_two_d(double *phase_two_fill, double *phase_two_bulk, int *phase_two, doub
             curandState *state, int length) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < length) {
-        if (curand_uniform(&state[idx]) < phase_two_rd_fill[idx]) {
+        curandState localState = state[idx];
+        if (curand_uniform(&localState) < phase_two_rd_fill[idx]) {
             phase_two[idx] = (int) __double2int_rn(phase_two_fill[idx]);
         } else {
             phase_two[idx] = (int) __double2int_rn(phase_two_bulk[idx]);
         }
+        state[idx] = localState;
     }
 }
